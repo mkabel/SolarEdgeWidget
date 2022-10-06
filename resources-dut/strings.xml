@@ -1,0 +1,12 @@
+<resources>
+    <string id="today">Vandaag</string>
+    <string id="day">Dag</string>
+    <string id="last6hours">Laatste 6 uur</string>
+    <string id="month">Maand</string>
+    <string id="year">Jaar</string>
+    <string id="consumed">Verbruik</string>
+    <string id="current">Huidig</string>
+    <string id="connect">Verbindt telefoon\na.u.b.</string>
+    <string id="error">Laden mislukt\nFout: </string>
+    <string id="unauthorized">Niet\ngeautoriseerd,\nconfigureer in\nConnectIQ</string>
+</resources>

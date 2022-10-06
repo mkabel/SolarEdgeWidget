@@ -1,0 +1,30 @@
+<resources>
+
+    <properties>
+        <property id="sysid_prop" type="number">99999</property>
+        <property id="apikey_prop" type="string">putinyourapikey</property>
+        <property id="consumption_prop" type="boolean">true</property>
+    </properties>
+
+    <strings>
+       <string id="sysid_title">System Id</string>
+       <string id="apikey_title">API key</string>
+       <string id="consumption_title">Consumption</string>
+    </strings>
+
+    <settings>
+
+        <setting propertyKey="@Properties.sysid_prop" title="@Strings.sysid_title">
+            <settingConfig type="numeric" />
+        </setting>
+
+        <setting propertyKey="@Properties.apikey_prop" title="@Strings.apikey_title">
+            <settingConfig type="alphaNumeric" />
+        </setting>
+
+        <setting propertyKey="@Properties.consumption_prop" title="@Strings.consumption_title">
+            <settingConfig type="boolean" />
+        </setting>
+
+    </settings>
+</resources>

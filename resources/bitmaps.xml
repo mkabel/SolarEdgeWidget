@@ -1,0 +1,6 @@
+<resources>
+    <bitmap id="LauncherIcon" filename="images/Sunshine.png" />
+    <bitmap id="Sunshine" filename="images/Sunshine.png" />
+    <bitmap id="Rain" filename="images/Rain.png" />
+    <bitmap id="Cloud" filename="images/Cloud.png" />
+</resources>
