@@ -306,12 +306,7 @@ enum GraphTypes {
     }
 
     private function Date( values as SolarStats ) as String {
-        var dateString = values.date;
-        if ( values.period.equals("week") ) {
-            var dI = DateStringToInfo(values.date);
-            dateString = dI.day_of_week.substring(0,1);
-        }
-        return dateString;
+        return values.date;
     }
 
     private function MaxGenerated( array as Array<SolarStats> ) as Number {

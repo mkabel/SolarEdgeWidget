@@ -39,6 +39,7 @@ enum Pages {
     private var _notify as Method(args as SolarStats or Array or String or Null) as Void;
     private var _idx = day as Pages;
     private var _baseUrl = "https://monitoringapi.solaredge.com/site/";
+    private var _startDate = "2022-01-01";
     private var _connectphone as String;
     private var _errormessage as String;
     private var _unauthorized as String;
@@ -53,6 +54,7 @@ enum Pages {
         _unauthorized = WatchUi.loadResource($.Rez.Strings.unauthorized) as String;
 
         ReadSettings();
+        getDataPeriod();
         getStatus();
     }
 
@@ -96,7 +98,7 @@ enum Pages {
             getMonthGraph(DateString(BeginOfYear(today)), DateString(today));
             break;
         case yearGraph:
-            getYearGraph();
+            getYearGraph(_startDate, DateString(today));
             break;
         default:
             break;
@@ -104,6 +106,22 @@ enum Pages {
 
         return true;
     }
+
+    //! Query the statistics of the PV System for the specified periods
+    private function getDataPeriod() as Void {
+        var url = _baseUrl + _sysid + "/dataPeriod";
+
+        var params = {           // set the parameters
+            "api_key" => _apikey,
+        };
+
+        var options = {
+			:method => Communications.HTTP_REQUEST_METHOD_GET
+		};
+
+        Communications.makeWebRequest( url, params, options, method(:onReceiveDataPeriod) );
+    }
+
 
     //! Query the current status of the PV System
     private function getStatus() as Void {
@@ -124,14 +142,20 @@ enum Pages {
 
     //! Query the current status of the PV System
     private function getHistory() as Void {
-        var url = _baseUrl + "getstatus.jsp";
+        var url = _baseUrl + _sysid + "/energy";
 
-        var params = {          // set the parameters
-            "h" => 1,
-            "limit" => 72       // last 6 hours
+        var params = {           // set the parameters
+            "api_key" => _apikey,
+            "startDate" => "2022-10-01",
+            "endDate" => "2022-10-01",
+            "timeUnit" => "DAY"
         };
 
-        //Communications.makeWebRequest( url, params, WebRequestOptions(), method(:onReceiveArrayResponse) );
+        var options = {
+			:method => Communications.HTTP_REQUEST_METHOD_GET
+		};
+
+        Communications.makeWebRequest( url, params, options, method(:onReceiveArrayResponse) );
     }
 
     //! Query the statistics of the PV System for the specified periods
@@ -154,36 +178,48 @@ enum Pages {
 
     //! Query the statistics of the PV System for the specified periods
     private function getMonthGraph( df as String, dt as String ) as Void {
-        var url = _baseUrl + "getoutput.jsp";
+        var url = _baseUrl + _sysid + "/energy";
 
         var params = {           // set the parameters
-            "df" => df,
-            "dt" => dt,
-            "a" => "m"
+            "api_key" => _apikey,
+            "startDate" => df,
+            "endDate" => dt,
+            "timeUnit" => "MONTH"
         };
 
-        Communications.makeWebRequest( url, params, WebRequestOptions(), method(:onReceiveArrayResponse) );
+        var options = {
+			:method => Communications.HTTP_REQUEST_METHOD_GET
+		};
+
+        Communications.makeWebRequest( url, params, options, method(:onReceiveArrayResponse) );
     }
 
     //! Query the statistics of the PV System for the specified periods
-    private function getYearGraph() as Void {
-        var url = _baseUrl + "getoutput.jsp";
+    private function getYearGraph(df as String, dt as String) as Void {
+        var url = _baseUrl + _sysid + "/energy";
 
         var params = {           // set the parameters
-            "a" => "y"
+            "api_key" => _apikey,
+            "startDate" => df,
+            "endDate" => dt,
+            "timeUnit" => "YEAR"
         };
 
-        Communications.makeWebRequest( url, params, WebRequestOptions(), method(:onReceiveArrayResponse) );
+        var options = {
+			:method => Communications.HTTP_REQUEST_METHOD_GET
+		};
+
+        Communications.makeWebRequest( url, params, options, method(:onReceiveArrayResponse) );
     }
 
-    private function WebRequestOptions() as Dictionary {
-        return {
-            :method => Communications.HTTP_REQUEST_METHOD_GET,
-            :headers => {
-                "X-Pvoutput-Apikey" => _apikey,
-                "X-Pvoutput-SystemId" => _sysid.toString()
-            }
-        };  
+    //! Receive the data from the web request
+    //! @param responseCode The server response code
+    //! @param data Content from a successful request
+    public function onReceiveDataPeriod(responseCode as Number, data as Dictionary<String, Object?> or String or Null) as Void {
+        if (responseCode == 200 ) {
+            var dataPeriod = data.get("dataPeriod");
+            _startDate = dataPeriod.get("startDate");
+        }
     }
 
     //! Receive the data from the web request
@@ -217,9 +253,8 @@ enum Pages {
             var energy = data.get("energy");
             var values = energy.get("values");
             var stats = [] as Array<SolarStats>;
-            for ( var i = 0; i < values.size(); i++ ) {
-                //var record = ParseString(",", records[i]);
-                stats.add(ProcessSiteEnergy("week", values[i]));
+            for ( var i = values.size()-1; i >= 0; i-- ) {
+                stats.add(ProcessSiteEnergy(ResponseType(energy.get("timeUnit")), values[i]));
             }
             _notify.invoke(stats);
         } else {
@@ -255,33 +290,17 @@ enum Pages {
 
     }
 
-    private function ResponseType( record as Array<String> ) as String {
+    private function ResponseType( unit as String ) as String {
         var type = "n/a";
-        switch ( record.size() ) {
-        case 9:
-            type = "day";
-            break;
-        case 11:
-            type = "history";
-            break;
-        case 14:
+
+        if ( unit.equals("DAY") ) {
             type = "week";
-            break;
-        case 10:
-            switch ( record[0].length() ) {
-            case 6:
-                type = "month";
-                break;
-            case 4:
-                type = "year";
-                break;
-            default:
-                break;
-            }
-            break;
-        default:
-            break;
+        } else if ( unit.equals("MONTH") ) {
+            type = "month";
+        } else if ( unit.equals("YEAR") ) {
+            type = "year";
         }
+
         return type;
     }
 
@@ -289,8 +308,18 @@ enum Pages {
         var _stats = new SolarStats();
 
         _stats.period       = period;
-        _stats.date         = values.get("date");
         _stats.generated    = values.get("value");
+
+        var date = ParseDate( values.get("date") );
+        if ( period.equals("week") ) {
+            _stats.date = date.day_of_week;
+        } else if ( period.equals("month") ) {
+            _stats.date = date.month;
+        } else if ( period.equals("year") ) {
+            _stats.date = date.year.toString();
+        } else {
+            _stats.date = date;
+        }
 
         return _stats;
     }
@@ -349,12 +378,7 @@ enum Pages {
     }
 
     private function ParseDate( input as String ) as String {
-        var dateString = input;
-        if ( input.length() == 6 ) {
-            // convert yyyymm to (abbreviated) month string
-            dateString = DateInfo(input.substring(0,4), input.substring(4,6), "1").month;
-        }
-        return dateString;
+        return DateInfo(input.substring(0,4), input.substring(5,7), input.substring(8,10));
     }
 
     private function DateInfo( year as String, month as String, day as String ) as Gregorian.Info {
