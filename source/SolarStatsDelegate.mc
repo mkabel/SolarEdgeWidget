@@ -89,16 +89,18 @@ enum Pages {
             getStatus();
             break;
         case hourGraph:
-            getHistory();
+            var moment = new Time.Moment(Time.now().value());
+            var now = Gregorian.info(moment,Time.FORMAT_SHORT );
+            getPower( DateTimeString(today), DateTimeString(now) );
             break;
         case dayGraph:
-            getDayGraph(DateString(DaysAgo(6)), DateString(today));
+            getEnergy( "DAY", DateString(DaysAgo(6)), DateString(today) );
             break;
         case monthGraph:
-            getMonthGraph(DateString(BeginOfYear(today)), DateString(today));
+            getEnergy( "MONTH", DateString(BeginOfYear(today)), DateString(today));
             break;
         case yearGraph:
-            getYearGraph(_startDate, DateString(today));
+            getEnergy( "YEAR", _startDate, DateString(today) );
             break;
         default:
             break;
@@ -140,76 +142,39 @@ enum Pages {
         //Communications.makeWebRequest( url, params, options, method(:onReceiveResponse) );
     }
 
-    //! Query the current status of the PV System
-    private function getHistory() as Void {
-        var url = _baseUrl + _sysid + "/energy";
+    private function getPower( tf as String, tt as String ) as Void {
+        var url = _baseUrl + _sysid + "/powerDetails";
 
-        var params = {           // set the parameters
-            "api_key" => _apikey,
-            "startDate" => "2022-10-01",
-            "endDate" => "2022-10-01",
-            "timeUnit" => "DAY"
+        var params = {
+            "api_key"   => _apikey,
+            "startTime" => tf,
+            "endTime"   => tt,
         };
 
         var options = {
 			:method => Communications.HTTP_REQUEST_METHOD_GET
 		};
 
-        Communications.makeWebRequest( url, params, options, method(:onReceiveArrayResponse) );
+        Communications.makeWebRequest( url, params, options, method(:onPowerResponse) );
+
     }
 
     //! Query the statistics of the PV System for the specified periods
-    private function getDayGraph( df as String, dt as String ) as Void {
+    private function getEnergy( unit as String, df as String, dt as String) as Void {
         var url = _baseUrl + _sysid + "/energy";
 
-        var params = {           // set the parameters
-            "api_key" => _apikey,
+        var params = {
+            "api_key"   => _apikey,
             "startDate" => df,
-            "endDate" => dt,
-            "timeUnit" => "DAY"
+            "endDate"   => dt,
+            "timeUnit"  => unit
         };
 
         var options = {
 			:method => Communications.HTTP_REQUEST_METHOD_GET
 		};
 
-        Communications.makeWebRequest( url, params, options, method(:onReceiveArrayResponse) );
-    }
-
-    //! Query the statistics of the PV System for the specified periods
-    private function getMonthGraph( df as String, dt as String ) as Void {
-        var url = _baseUrl + _sysid + "/energy";
-
-        var params = {           // set the parameters
-            "api_key" => _apikey,
-            "startDate" => df,
-            "endDate" => dt,
-            "timeUnit" => "MONTH"
-        };
-
-        var options = {
-			:method => Communications.HTTP_REQUEST_METHOD_GET
-		};
-
-        Communications.makeWebRequest( url, params, options, method(:onReceiveArrayResponse) );
-    }
-
-    //! Query the statistics of the PV System for the specified periods
-    private function getYearGraph(df as String, dt as String) as Void {
-        var url = _baseUrl + _sysid + "/energy";
-
-        var params = {           // set the parameters
-            "api_key" => _apikey,
-            "startDate" => df,
-            "endDate" => dt,
-            "timeUnit" => "YEAR"
-        };
-
-        var options = {
-			:method => Communications.HTTP_REQUEST_METHOD_GET
-		};
-
-        Communications.makeWebRequest( url, params, options, method(:onReceiveArrayResponse) );
+        Communications.makeWebRequest( url, params, options, method(:onEnergyResponse) );
     }
 
     //! Receive the data from the web request
@@ -223,11 +188,8 @@ enum Pages {
     }
 
     //! Receive the data from the web request
-    //! @param responseCode The server response code
-    //! @param data Content from a successful request
     public function onReceiveResponse(responseCode as Number, data as Dictionary<String, Object?> or String or Null) as Void {
         if (responseCode == 200) {
-            System.println(data);
             var energy = data.get("energy");
             var values = energy.get("values");
             var value = values[0].get("value");
@@ -236,9 +198,6 @@ enum Pages {
             stats.date = "2022-10-03";
             stats.time = "21:00";
 
-            //var siteEnergy = data.get('sitesEnergy');
-            // var record = ParseString(",", data.toString());
-            // var stats = ProcessResult(ResponseType(record), record);
             _notify.invoke(stats);
         } else {
             ProcessError(responseCode, data);
@@ -246,9 +205,24 @@ enum Pages {
     }
 
     //! Receive the data from the web request
-    //! @param responseCode The server response code
-    //! @param data Content from a successful request
-    public function onReceiveArrayResponse(responseCode as Number, data as Dictionary<String, Object?> or String or Null) as Void {
+    public function onPowerResponse( responseCode as Number, data as Dictionary<String, Object?> or String or Null ) as Void {
+        if (responseCode == 200) {
+            var powerDetails = data.get("powerDetails");
+            var meters = powerDetails.get("meters");
+            var values = meters[0].get("values");
+            var stats = [] as Array<SolarStats>;
+            for ( var i = values.size()-1; i >= 0; i-- ) {
+                stats.add(ProcessSitePower(ResponseType(powerDetails.get("timeUnit")), values[i]));
+            }
+            _notify.invoke(stats);
+        } else {
+            ProcessError(responseCode, data);
+        }
+    }
+
+    //! Receive the data from the web request
+    public function onEnergyResponse(responseCode as Number, data as Dictionary<String, Object?> or String or Null) as Void {
+        System.println(data);
         if (responseCode == 200 ) {
             var energy = data.get("energy");
             var values = energy.get("values");
@@ -293,7 +267,9 @@ enum Pages {
     private function ResponseType( unit as String ) as String {
         var type = "n/a";
 
-        if ( unit.equals("DAY") ) {
+        if ( unit.equals("QUARTER_OF_AN_HOUR") ) {
+            type = "history";
+        } else if ( unit.equals("DAY") ) {
             type = "week";
         } else if ( unit.equals("MONTH") ) {
             type = "month";
@@ -310,7 +286,7 @@ enum Pages {
         _stats.period       = period;
         _stats.generated    = values.get("value");
 
-        var date = ParseDate( values.get("date") );
+        var date = Gregorian.info(ParseDate(values.get("date")), Time.FORMAT_LONG);
         if ( period.equals("week") ) {
             _stats.date = date.day_of_week;
         } else if ( period.equals("month") ) {
@@ -320,42 +296,20 @@ enum Pages {
         } else {
             _stats.date = date;
         }
+        _stats.time = TimeString(date);
 
         return _stats;
     }
 
-    private function ProcessResult( period as String, values as Array ) as SolarStats {
+    private function ProcessSitePower( period as String, values as Array ) as SolarStats {
         var _stats = new SolarStats();
 
-        _stats.period       = period;
-        _stats.date         = ParseDate(values[0]);
+        var date = Gregorian.info( ParseDate(values.get("date")), Time.FORMAT_SHORT );
+        _stats.date         = DateString(date);
+        _stats.time         = TimeString(date);
 
-        if ( period.equals("day") ) {
-            _stats.time         = values[1];
-            _stats.generated    = values[2].toFloat();
-            _stats.generating   = values[3].toLong();
-            _stats.consumed     = values[4].toFloat();
-            _stats.consuming    = values[5].toLong();
-        } else if (period.equals("history") ) {
-            _stats.time         = values[1];
-            _stats.generated    = values[2].toFloat();
-            _stats.generating   = values[4].toLong();
-            _stats.consumed     = values[7].toFloat();
-            _stats.consuming    = values[8].toLong();
-        } else if (period.equals("week") ) {
-            _stats.time         = values[6];
-            _stats.generated    = values[1].toFloat();
-            _stats.generating   = NaN;
-            _stats.consumed     = values[4].toFloat();
-            _stats.consuming    = NaN;
-        }
-        else {
-            _stats.time         = values[1];
-            _stats.generated    = values[2].toFloat();
-            _stats.generating   = NaN;
-            _stats.consumed     = values[5].toFloat();
-            _stats.consuming    = NaN;
-        }
+        _stats.period       = period;
+        _stats.generating   = values.get("value");
 
         return _stats;
     }
@@ -377,19 +331,19 @@ enum Pages {
         return period;
     }
 
-    private function ParseDate( input as String ) as String {
-        return DateInfo(input.substring(0,4), input.substring(5,7), input.substring(8,10));
+    private function ParseDate( input as String ) as Time.Moment {
+        return DateInfo(input.substring(0,4), input.substring(5,7), input.substring(8,10), input.substring(11,13), input.substring(14,16));
     }
 
-    private function DateInfo( year as String, month as String, day as String ) as Gregorian.Info {
+    private function DateInfo( year as String, month as String, day as String, hour as String, minute as String ) as Gregorian.Moment {
         var options = {
             :year => year.toNumber(),
             :month => month.toNumber(),
             :day => day.toNumber(),
-            :hour => 0,
-            :minute => 0
+            :hour => hour.toNumber(),
+            :minute => minute.toNumber()
         };
-        return Gregorian.info(Gregorian.moment(options), Time.FORMAT_LONG);
+        return Gregorian.moment(options);
     }
 
     private function DaysAgo( days_ago as Number ) as Gregorian.Info {
@@ -426,23 +380,17 @@ enum Pages {
         );
     }
 
-    //! convert string into a substring dictionary
-    private function ParseString(delimiter as String, data as String) as Array {
-        var result = [] as Array<String>;
-        var endIndex = 0;
-        var subString;
-        
-        while (endIndex != null) {
-            endIndex = data.find(delimiter);
-            if ( endIndex != null ) {
-                subString = data.substring(0, endIndex) as String;
-                data = data.substring(endIndex+1, data.length());
-            } else {
-                subString = data;
-            }
-            result.add(subString);
-        }
+    private function TimeString( date as Gregorian.Info ) as String {
+        return Lang.format(
+            "$1$:$2$:00",
+            [
+                date.hour.format("%02d"),
+                date.min.format("%02d")
+            ]
+        );
+    }
 
-        return result;
+    private function DateTimeString( date as Gregorian.Info ) as String {
+        return DateString(date) + " " + TimeString(date);
     }
 }
