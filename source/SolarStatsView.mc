@@ -31,7 +31,7 @@ enum GraphTypes {
     barGraph
 }
 
-//! Shows the PVOutput Solar panel results
+//! Shows the SolarEdge Solar panel results
 (:glance) class SolarStatsView extends WatchUi.View {
     private var _stats = new SolarStats();
     private var _graph = [] as Array;

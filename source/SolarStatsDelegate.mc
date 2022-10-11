@@ -281,11 +281,15 @@ enum Pages {
     }
 
     public function ProcessError( responseCode as Number, data as String ) {
-        var message = CommunicationsError.Message(responseCode);
-        if ( message != null ) {
-            _notify.invoke(message);
+        if ( responseCode == 403 ) {
+            _notify.invoke(_unauthorized);
         } else {
-            _notify.invoke(_errormessage + responseCode.toString());
+            var message = CommunicationsError.Message(responseCode);
+            if ( message != null ) {
+                _notify.invoke(message);
+            } else {
+                _notify.invoke(_errormessage + responseCode.toString());
+            }
         }
     }
 

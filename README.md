@@ -1,4 +1,4 @@
-PVOutputStatsWidget is a Garmin watch widget displaying PVOutput data.
+SolarEdge Widget is a Garmin watch widget displaying SolarEdge PV data.
 
 The widget shows:
 * Current day overview
@@ -9,7 +9,7 @@ The widget shows:
 
 Browsing through the pages by Select (Touch screen or Select button).
 
-The widget works on the basis of a properly configured API_KEY and SysID. The settings can be found on the PVOutput settings page. The settings can be configured in the ConnectIQ app.
+The widget works on the basis of a properly configured API_KEY and SysID. The settings can be found on the Solar Edge Admin settings page. The settings can be configured in the ConnectIQ app.
 
 In the settings you can also set the 'consumption' property to show/hide consumption data.
 
