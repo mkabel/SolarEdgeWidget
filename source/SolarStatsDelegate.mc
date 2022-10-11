@@ -55,7 +55,7 @@ enum Pages {
 
         ReadSettings();
         getDataPeriod();
-        getStatus();
+        getOverview();
     }
 
     private function ReadSettings() {
@@ -86,7 +86,7 @@ enum Pages {
         var today = DaysAgo(0);
         switch ( _idx ) {
         case day:
-            getStatus();
+            getOverview();
             break;
         case hourGraph:
             var moment = new Time.Moment(Time.now().value());
@@ -126,20 +126,18 @@ enum Pages {
 
 
     //! Query the current status of the PV System
-    private function getStatus() as Void {
-        var url = _baseUrl + _sysid + "/energy";
+    private function getOverview() as Void {
+        var url = _baseUrl + _sysid + "/overview";
 
         var params = {           // set the parameters
             "api_key" => _apikey,
-            "startTime" => "2022-10-03 11:00:00",
-            "endTime" => "2022-10-03 12:00:00",
         };
 
         var options = {
 			:method => Communications.HTTP_REQUEST_METHOD_GET
 		};
 
-        //Communications.makeWebRequest( url, params, options, method(:onReceiveResponse) );
+        Communications.makeWebRequest( url, params, options, method(:onReceiveOverview) );
     }
 
     private function getPower( tf as String, tt as String ) as Void {
@@ -178,27 +176,39 @@ enum Pages {
     }
 
     //! Receive the data from the web request
-    //! @param responseCode The server response code
-    //! @param data Content from a successful request
-    public function onReceiveDataPeriod(responseCode as Number, data as Dictionary<String, Object?> or String or Null) as Void {
+    public function onReceiveOverview(responseCode as Number, data as Dictionary<String, Object?> or String or Null) as Void {
         if (responseCode == 200 ) {
-            var dataPeriod = data.get("dataPeriod");
-            _startDate = dataPeriod.get("startDate");
+            var overview = data.get("overview");
+            var lastUpdate = overview.get("lastUpdateTime");
+            
+            var currentPower = overview.get("currentPower");
+            var power = currentPower.get("power");
+            
+            var lastDay = overview.get("lastDayData");
+            var energy = lastDay.get("energy");
+            
+            System.println(power);
+
+            var stats = new SolarStats();
+            stats.period       = "day";
+            var date           = Gregorian.info( ParseDate(lastUpdate), Time.FORMAT_SHORT );
+            stats.date         = DateString(date);
+            stats.time         = TimeString(date);
+            stats.generated    = energy;
+            stats.generating   = power;
+
+            _notify.invoke(stats);
+        } else {
+            ProcessError(responseCode, data);
         }
     }
 
     //! Receive the data from the web request
-    public function onReceiveResponse(responseCode as Number, data as Dictionary<String, Object?> or String or Null) as Void {
-        if (responseCode == 200) {
-            var energy = data.get("energy");
-            var values = energy.get("values");
-            var value = values[0].get("value");
-            var stats = new SolarStats();
-            stats.generated = value;
-            stats.date = "2022-10-03";
-            stats.time = "21:00";
-
-            _notify.invoke(stats);
+    public function onReceiveDataPeriod(responseCode as Number, data as Dictionary<String, Object?> or String or Null) as Void {
+        if (responseCode == 200 ) {
+            var dataPeriod = data.get("dataPeriod");
+            _startDate = dataPeriod.get("startDate");
+            System.println(_startDate);
         } else {
             ProcessError(responseCode, data);
         }
@@ -236,50 +246,6 @@ enum Pages {
         }
     }
 
-    public function ProcessError( responseCode as Number, data as String ) {
-        if ( IsPvOutputError(responseCode) ) {
-            switch (responseCode) {
-            case 401:
-                _notify.invoke(_unauthorized);
-                break;
-            default:
-                _notify.invoke("PVOutput - " + data);
-            }
-        } else {
-            var message = CommunicationsError.Message(responseCode);
-            if ( message != null ) {
-                _notify.invoke(message);
-            } else {
-                _notify.invoke(_errormessage + responseCode.toString());
-            }
-        }
-    }
-
-    private function IsPvOutputError(errorCode as Number ) as Boolean {
-        var isError = false;
-        if ( errorCode >= 400 and errorCode < 500 ) {
-            isError = true;
-        }
-        return isError;
-
-    }
-
-    private function ResponseType( unit as String ) as String {
-        var type = "n/a";
-
-        if ( unit.equals("QUARTER_OF_AN_HOUR") ) {
-            type = "history";
-        } else if ( unit.equals("DAY") ) {
-            type = "week";
-        } else if ( unit.equals("MONTH") ) {
-            type = "month";
-        } else if ( unit.equals("YEAR") ) {
-            type = "year";
-        }
-
-        return type;
-    }
-
     private function ProcessSiteEnergy( period as String, values as Array ) as SolarStats {
         var _stats = new SolarStats();
 
@@ -314,6 +280,31 @@ enum Pages {
         return _stats;
     }
 
+    public function ProcessError( responseCode as Number, data as String ) {
+        var message = CommunicationsError.Message(responseCode);
+        if ( message != null ) {
+            _notify.invoke(message);
+        } else {
+            _notify.invoke(_errormessage + responseCode.toString());
+        }
+    }
+
+    private function ResponseType( unit as String ) as String {
+        var type = "n/a";
+
+        if ( unit.equals("QUARTER_OF_AN_HOUR") ) {
+            type = "history";
+        } else if ( unit.equals("DAY") ) {
+            type = "week";
+        } else if ( unit.equals("MONTH") ) {
+            type = "month";
+        } else if ( unit.equals("YEAR") ) {
+            type = "year";
+        }
+
+        return type;
+    }
+
     private function Period( idx as Pages ) as String {
         var period = "unknown";
         if ( idx == day ) {
@@ -329,21 +320,6 @@ enum Pages {
         }
 
         return period;
-    }
-
-    private function ParseDate( input as String ) as Time.Moment {
-        return DateInfo(input.substring(0,4), input.substring(5,7), input.substring(8,10), input.substring(11,13), input.substring(14,16));
-    }
-
-    private function DateInfo( year as String, month as String, day as String, hour as String, minute as String ) as Gregorian.Moment {
-        var options = {
-            :year => year.toNumber(),
-            :month => month.toNumber(),
-            :day => day.toNumber(),
-            :hour => hour.toNumber(),
-            :minute => minute.toNumber()
-        };
-        return Gregorian.moment(options);
     }
 
     private function DaysAgo( days_ago as Number ) as Gregorian.Info {
@@ -369,6 +345,28 @@ enum Pages {
         return Gregorian.info(Gregorian.moment(options), Time.FORMAT_SHORT);
     }
 
+    private function ParseDate( input as String ) as Gregorian.Moment {
+        return DateInfo(input.substring(0,4), input.substring(5,7), input.substring(8,10), input.substring(11,13), input.substring(14,16));
+    }
+
+    private function DateInfo( year as String, month as String, day as String, hour as String, minute as String ) as Gregorian.Moment {
+        var options = {
+            :year => year.toNumber(),
+            :month => month.toNumber(),
+            :day => day.toNumber(),
+            :hour => hour.toNumber(),
+            :minute => minute.toNumber()
+        };
+        var moment = Gregorian.moment(options);
+        var offset = new Time.Duration( System.getClockTime().timeZoneOffset );
+
+        return moment.subtract(offset);
+    }
+
+    private function DateTimeString( date as Gregorian.Info ) as String {
+        return DateString(date) + " " + TimeString(date);
+    }
+
     private function DateString( date as Gregorian.Info ) as String {
         return Lang.format(
             "$1$-$2$-$3$",
@@ -388,9 +386,5 @@ enum Pages {
                 date.min.format("%02d")
             ]
         );
-    }
-
-    private function DateTimeString( date as Gregorian.Info ) as String {
-        return DateString(date) + " " + TimeString(date);
     }
 }
