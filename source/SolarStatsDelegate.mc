@@ -188,12 +188,12 @@ enum Pages {
             var energy = lastDay.get("energy");
             
             var stats = new SolarStats();
-            stats.period       = "day";
-            var date           = Gregorian.info( ParseDate(lastUpdate), Time.FORMAT_SHORT );
-            stats.date         = DateString(date);
-            stats.time         = TimeString(date);
-            stats.generated    = energy;
-            stats.generating   = power;
+            stats.period     = "day";
+            var date         = Gregorian.utcInfo( ParseDate(lastUpdate), Time.FORMAT_SHORT );
+            stats.date       = DateString(date);
+            stats.time       = TimeString(date);
+            stats.generated  = energy;
+            stats.generating = power;
 
             _notify.invoke(stats);
         } else {
@@ -248,7 +248,7 @@ enum Pages {
         _stats.period       = period;
         _stats.generated    = values.get("value");
 
-        var date = Gregorian.info(ParseDate(values.get("date")), Time.FORMAT_LONG);
+        var date = Gregorian.utcInfo(ParseDate(values.get("date")), Time.FORMAT_LONG);
         if ( period.equals("week") ) {
             _stats.date = date.day_of_week;
         } else if ( period.equals("month") ) {
@@ -266,7 +266,7 @@ enum Pages {
     private function ProcessSitePower( period as String, values as Array ) as SolarStats {
         var _stats = new SolarStats();
 
-        var date = Gregorian.info( ParseDate(values.get("date")), Time.FORMAT_SHORT );
+        var date = Gregorian.utcInfo( ParseDate(values.get("date")), Time.FORMAT_SHORT );
         _stats.date         = DateString(date);
         _stats.time         = TimeString(date);
 
@@ -345,11 +345,15 @@ enum Pages {
         return Gregorian.info(Gregorian.moment(options), Time.FORMAT_SHORT);
     }
 
+    // returns Gregorian.Moment based upon date/time string without timezone info.
+    // Can be used to create a Gregorian.utcInfo object if you want to convert object 
+    // irrespective of timezone and dst
     private function ParseDate( input as String ) as Gregorian.Moment {
-        return DateInfo(input.substring(0,4), input.substring(5,7), input.substring(8,10), input.substring(11,13), input.substring(14,16));
+        return Moment(input.substring(0,4), input.substring(5,7), input.substring(8,10), input.substring(11,13), input.substring(14,16));
     }
 
-    private function DateInfo( year as String, month as String, day as String, hour as String, minute as String ) as Gregorian.Moment {
+    // returns Gregorian.Moment object on the basis of UTC time
+    private function Moment( year as String, month as String, day as String, hour as String, minute as String ) as Gregorian.Moment {
         var options = {
             :year => year.toNumber(),
             :month => month.toNumber(),
@@ -357,10 +361,7 @@ enum Pages {
             :hour => hour.toNumber(),
             :minute => minute.toNumber()
         };
-        var moment = Gregorian.moment(options);
-        var offset = new Time.Duration( System.getClockTime().timeZoneOffset );
-
-        return moment.subtract(offset);
+        return Gregorian.moment(options);
     }
 
     private function DateTimeString( date as Gregorian.Info ) as String {
