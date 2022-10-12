@@ -187,8 +187,6 @@ enum Pages {
             var lastDay = overview.get("lastDayData");
             var energy = lastDay.get("energy");
             
-            System.println(power);
-
             var stats = new SolarStats();
             stats.period       = "day";
             var date           = Gregorian.info( ParseDate(lastUpdate), Time.FORMAT_SHORT );
@@ -208,7 +206,6 @@ enum Pages {
         if (responseCode == 200 ) {
             var dataPeriod = data.get("dataPeriod");
             _startDate = dataPeriod.get("startDate");
-            System.println(_startDate);
         } else {
             ProcessError(responseCode, data);
         }
@@ -232,7 +229,6 @@ enum Pages {
 
     //! Receive the data from the web request
     public function onEnergyResponse(responseCode as Number, data as Dictionary<String, Object?> or String or Null) as Void {
-        System.println(data);
         if (responseCode == 200 ) {
             var energy = data.get("energy");
             var values = energy.get("values");
