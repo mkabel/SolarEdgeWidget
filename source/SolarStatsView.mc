@@ -190,6 +190,11 @@ enum GraphTypes {
                 dc.setPenWidth(1);
                 dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
                 dc.drawLine(offsetX - stepSize*i, offsetY + 5, offsetX - stepSize*i, offsetY - 5);
+
+                var hour = values[i].time.substring(0,2).toLong();
+                if ( hour % 6 == 0 ) {
+                    dc.drawText(offsetX - stepSize*i, offsetY + 3, Graphics.FONT_SYSTEM_XTINY, hour.toString(), Graphics.TEXT_JUSTIFY_CENTER );
+                }
             }
 
             fX = tX;
@@ -200,7 +205,7 @@ enum GraphTypes {
         var fhXTiny = dc.getFontHeight(Graphics.FONT_SYSTEM_XTINY);
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
-        dc.drawText(dc.getWidth() / 2, (dc.getHeight() + height) / 2 + fhXTiny, Graphics.FONT_SYSTEM_TINY, Header(values[0]), Graphics.TEXT_JUSTIFY_CENTER);
+        dc.drawText(dc.getWidth() / 2, (dc.getHeight() + height) / 2 + fhTiny, Graphics.FONT_SYSTEM_TINY, Header(values[0]), Graphics.TEXT_JUSTIFY_CENTER);
         if ( values[0].generating != null ) {
             dc.drawText(dc.getWidth() / 2, (dc.getHeight() - height) / 2 - fhTiny - fhXTiny - 5, Graphics.FONT_SYSTEM_TINY, (CheckValue(values[0].generating)/1000).format("%.1f") + " W", Graphics.TEXT_JUSTIFY_CENTER );
         } else {
@@ -396,21 +401,6 @@ enum GraphTypes {
         if ( _stats.period == null ) {
             _stats.period = "n/a";
         }
-    }
-
-    private function DateStringToInfo(dateString as String ) as Gregorian.Info {
-        return DateInfo(dateString.substring(0,4), dateString.substring(5,7), dateString.substring(8,10));
-    }
-
-    private function DateInfo( year as String, month as String, day as String ) as Gregorian.Info {
-        var options = {
-            :year => year.toNumber(),
-            :month => month.toNumber(),
-            :day => day.toNumber(),
-            :hour => 0,
-            :minute => 0
-        };
-        return Gregorian.info(Gregorian.moment(options), Time.FORMAT_LONG);
     }
 
     //! Called when this View is removed from the screen. Save the
