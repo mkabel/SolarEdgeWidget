@@ -219,6 +219,9 @@ enum Pages {
             var values = meters[0].get("values");
             var stats = [] as Array<SolarStats>;
             for ( var i = values.size()-1; i >= 0; i-- ) {
+                if ( System.getSystemStats().freeMemory < 2500 ) {
+                    break;
+                }
                 stats.add(ProcessSitePower(ResponseType(powerDetails.get("timeUnit")), values[i]));
             }
             _notify.invoke(stats);
