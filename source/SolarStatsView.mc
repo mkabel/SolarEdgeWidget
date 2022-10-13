@@ -124,14 +124,14 @@ enum GraphTypes {
             locGenerated = locGenerated + fhLarge;
             locGeneration = locGenerated + fhLarge;
         } else {
-            locGenerated  = (dc.getHeight() - fhLarge) / 2;
+            locGenerated  = (dc.getHeight() - fhLarge - 8) / 2;
             locGeneration = locGenerated + fhLarge + 5;
         }
 
         dc.drawText(dc.getWidth() / 2, locHeader, Graphics.FONT_LARGE, Header(_stats), Graphics.TEXT_JUSTIFY_CENTER );
         
-        dc.drawText(dc.getWidth() / 2, locGenerated, Graphics.FONT_LARGE, (_stats.generated/1000).format("%.1f") + " kWh", Graphics.TEXT_JUSTIFY_CENTER );
-        dc.drawText(dc.getWidth() / 2, locGeneration, Graphics.FONT_SYSTEM_XTINY, _current + ": " + _stats.generating.format("%.0f") + " W", Graphics.TEXT_JUSTIFY_CENTER );
+        dc.drawText(dc.getWidth() / 2, locGenerated, Graphics.FONT_SYSTEM_LARGE, (_stats.generated/1000).format("%.1f") + " kWh", Graphics.TEXT_JUSTIFY_CENTER );
+        dc.drawText(dc.getWidth() / 2, locGeneration, Graphics.FONT_SYSTEM_SMALL, _current + ": " + _stats.generating.format("%.0f") + " W", Graphics.TEXT_JUSTIFY_CENTER );
         dc.drawText(dc.getWidth() / 2, locTime, Graphics.FONT_SYSTEM_XTINY, "@ " + _stats.time.substring(0,5), Graphics.TEXT_JUSTIFY_CENTER );
 
         if (_showconsumption ) {
