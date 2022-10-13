@@ -308,23 +308,6 @@ enum Pages {
         return type;
     }
 
-    private function Period( idx as Pages ) as String {
-        var period = "unknown";
-        if ( idx == day ) {
-            period = "day";
-        } else if ( idx == hourGraph ) {
-            period = "history";
-        } else if ( idx == dayGraph ) {
-            period = "week";
-        } else if ( idx == monthGraph ) {
-            period = "month";
-        } else if ( idx == yearGraph ) {
-            period = "year";
-        }
-
-        return period;
-    }
-
     private function DaysAgo( days_ago as Number ) as Gregorian.Info {
         var today = new Time.Moment(Time.today().value());
         return Gregorian.info(today.subtract(new Time.Duration(days_ago*60*60*24)), Time.FORMAT_SHORT);
