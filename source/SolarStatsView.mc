@@ -50,7 +50,6 @@ enum GraphTypes {
     //! Constructor
     public function initialize() {
         WatchUi.View.initialize();
-        //_showconsumption = Properties.getValue($.consumption);
     }
 
     //! Load your resources here
