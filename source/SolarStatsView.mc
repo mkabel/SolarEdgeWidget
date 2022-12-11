@@ -110,39 +110,40 @@ enum GraphTypes {
 
         var fhXLarge = dc.getFontHeight(Graphics.FONT_SYSTEM_NUMBER_THAI_HOT);
         var fhLarge  = dc.getFontHeight(Graphics.FONT_SYSTEM_LARGE);
-        var fhXTiny  = dc.getFontHeight(Graphics.FONT_SYSTEM_XTINY);
-        var fhTiny   = dc.getFontHeight(Graphics.FONT_SYSTEM_TINY);
         
-        var locHeader = dc.getHeight() / 2 - 2*fhLarge - fhXTiny;
-        var locGenerated = locHeader;
-        var locGeneration = locHeader;
-        var locConsumed = dc.getHeight() / 2 + 5;
-        var locConsumption = locConsumed + fhTiny;
-        var locTime = dc.getHeight() / 2 + 2*fhLarge;
-
-        if ( _showconsumption ) {
-            locGenerated = locGenerated + fhLarge;
-            locGeneration = locGenerated + fhLarge;
-        } else {
-            locGenerated  = dc.getHeight()/2;
-            locGeneration = locGenerated + fhXLarge/2 + 3;
-        }
-
-        dc.drawText(dc.getWidth() / 2, locHeader, Graphics.FONT_LARGE, Header(_stats), Graphics.TEXT_JUSTIFY_CENTER );
+        var locHeader = dc.getHeight() / 2 - fhXLarge/2 - fhLarge;
+        var locTime = 0.9*dc.getHeight();
         
         var generated = (_stats.generated/1000).format("%.1f");
-        var genWidth = dc.getTextWidthInPixels(generated, Graphics.FONT_SYSTEM_NUMBER_THAI_HOT);
+        var dimGen = dc.getTextDimensions(generated, Graphics.FONT_SYSTEM_NUMBER_THAI_HOT);
 
-        dc.drawText((dc.getWidth())/2, locGenerated, Graphics.FONT_SYSTEM_NUMBER_THAI_HOT, generated, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER );
-        dc.drawText((dc.getWidth() + genWidth)/2 + 3, locGenerated + fhXLarge/2 - 2*fhXTiny, Graphics.FONT_SYSTEM_XTINY, "kWh", Graphics.TEXT_JUSTIFY_LEFT );
+        var genX = dc.getWidth() / 2;
+        var genY = dc.getHeight() / 2;
+        var kWhX = genX + dimGen[0]/2 + 2;
+        var prodY = genY + fhXLarge/2;
 
-        dc.drawText(dc.getWidth() / 2, locGeneration, Graphics.FONT_SYSTEM_XTINY, _current + ": " + _stats.generating.format("%.0f") + " W", Graphics.TEXT_JUSTIFY_CENTER );
-        dc.drawText(dc.getWidth() / 2, locTime, Graphics.FONT_SYSTEM_XTINY, "@ " + _stats.time.substring(0,5), Graphics.TEXT_JUSTIFY_CENTER );
+        dc.drawText(dc.getWidth() / 2, locHeader, 
+                                Graphics.FONT_SYSTEM_LARGE, 
+                                Header(_stats), 
+                                Graphics.TEXT_JUSTIFY_CENTER );
 
-        if (_showconsumption ) {
-            dc.drawText(dc.getWidth() / 2, locConsumed, Graphics.FONT_SYSTEM_TINY, _consumed + ": " + (_stats.consumed/1000).format("%.1f")+ " kWh", Graphics.TEXT_JUSTIFY_CENTER );
-            dc.drawText(dc.getWidth() / 2, locConsumption, Graphics.FONT_SYSTEM_XTINY, _current + ": " + _stats.consuming + " W", Graphics.TEXT_JUSTIFY_CENTER );
-        }
+        dc.drawText(genX, genY, Graphics.FONT_SYSTEM_NUMBER_THAI_HOT, 
+                                generated, 
+                                Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER );
+                                
+        dc.drawText(kWhX, genY, Graphics.FONT_SYSTEM_XTINY, 
+                                "kWh", 
+                                Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER );
+
+        dc.drawText(dc.getWidth() / 2, prodY, 
+                                Graphics.FONT_SYSTEM_XTINY, 
+                                _current + ": " + _stats.generating.format("%.0f") + " W", 
+                                Graphics.TEXT_JUSTIFY_CENTER );
+
+        dc.drawText(dc.getWidth() / 2, locTime, 
+                                Graphics.FONT_SYSTEM_XTINY, 
+                                "@ " + _stats.time.substring(0,5), 
+                                Graphics.TEXT_JUSTIFY_CENTER );
     }
 
     private function ShowLineGraph(dc as Dc, values as Array<SolarStats>) {
