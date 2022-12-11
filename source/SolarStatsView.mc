@@ -289,15 +289,13 @@ enum GraphTypes {
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
             dc.drawLine(offsetX - stepSize*i, offsetY + 5, offsetX - stepSize*i, offsetY - 5);
 
-            if ( values.size() < 12 or (i % 2 == 0) ) {
-                dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
-                var dateString = Date(values[i]);
-                var textWidth = dc.getTextWidthInPixels(dateString, Graphics.FONT_SYSTEM_XTINY);
-                if ( (textWidth+2) > stepSize and dateString.length() == 3 ) {
-                    dateString = dateString.substring(0, 1);
-                }
-                dc.drawText(offsetX - stepSize*(i+0.5), offsetY, Graphics.FONT_SYSTEM_XTINY, dateString, Graphics.TEXT_JUSTIFY_CENTER );
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
+            var dateString = Date(values[i]);
+            var textWidth = dc.getTextWidthInPixels(dateString, Graphics.FONT_SYSTEM_XTINY);
+            if ( (textWidth+2) > stepSize and dateString.length() == 3 ) {
+                dateString = dateString.substring(0, 1);
             }
+            dc.drawText(offsetX - stepSize*(i+0.5), offsetY, Graphics.FONT_SYSTEM_XTINY, dateString, Graphics.TEXT_JUSTIFY_CENTER );
         }
 
 
