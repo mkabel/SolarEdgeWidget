@@ -131,10 +131,12 @@ enum GraphTypes {
                                 generated, 
                                 Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER );
                                 
+        dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_BLACK);
         dc.drawText(kWhX, genY, Graphics.FONT_SYSTEM_XTINY, 
                                 "kWh", 
                                 Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER );
 
+        dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
         dc.drawText(dc.getWidth() / 2, prodY, 
                                 Graphics.FONT_SYSTEM_XTINY, 
                                 _current + ": " + _stats.generating.format("%.0f") + " W", 
