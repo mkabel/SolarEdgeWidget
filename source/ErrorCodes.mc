@@ -18,6 +18,7 @@
 //
 
 import Toybox.Communications;
+import Toybox.Lang;
 
 var _communicationsError = {
     Communications.UNKNOWN_ERROR                                    => "An unknown error has occurred.",
@@ -48,7 +49,7 @@ var _communicationsError = {
 };
 
 class CommunicationsError {
-    public function Message( errorCode as Number ) as String {
+    public function Message( errorCode as Lang.Number ) as Lang.String {
         return _communicationsError.get(errorCode);
     }
 }

@@ -22,6 +22,7 @@ import Toybox.Lang;
 import Toybox.WatchUi;
 import Toybox.System;
 import Toybox.Application.Properties;
+import Toybox.Time;
 import Toybox.Time.Gregorian;
 
 enum Pages {
@@ -176,16 +177,16 @@ enum Pages {
     }
 
     //! Receive the data from the web request
-    public function onReceiveOverview(responseCode as Number, data as Dictionary<String, Object?> or String or Null) as Void {
+    public function onReceiveOverview(responseCode as Number, data as Dictionary or String or Null) as Void {
         if (responseCode == 200 ) {
-            var overview = data.get("overview");
-            var lastUpdate = overview.get("lastUpdateTime");
+            var overview = data.get("overview") as Dictionary;
+            var lastUpdate = overview.get("lastUpdateTime") as String;
             
-            var currentPower = overview.get("currentPower");
-            var power = currentPower.get("power");
+            var currentPower = overview.get("currentPower") as Dictionary;
+            var power = currentPower.get("power") as String;
             
-            var lastDay = overview.get("lastDayData");
-            var energy = lastDay.get("energy");
+            var lastDay = overview.get("lastDayData") as Dictionary;
+            var energy = lastDay.get("energy") as String;
             
             var stats = new SolarStats();
             stats.period     = "day";
@@ -202,9 +203,9 @@ enum Pages {
     }
 
     //! Receive the data from the web request
-    public function onReceiveDataPeriod(responseCode as Number, data as Dictionary<String, Object?> or String or Null) as Void {
+    public function onReceiveDataPeriod(responseCode as Number, data as Dictionary or String or Null) as Void {
         if (responseCode == 200 ) {
-            var dataPeriod = data.get("dataPeriod");
+            var dataPeriod = data.get("dataPeriod") as Dictionary;
             _startDate = dataPeriod.get("startDate");
         } else {
             ProcessError(responseCode, data);
@@ -212,17 +213,17 @@ enum Pages {
     }
 
     //! Receive the data from the web request
-    public function onPowerResponse( responseCode as Number, data as Dictionary<String, Object?> or String or Null ) as Void {
+    public function onPowerResponse( responseCode as Number, data as Dictionary or String or Null ) as Void {
         if (responseCode == 200) {
-            var powerDetails = data.get("powerDetails");
-            var meters = powerDetails.get("meters");
-            var values = meters[0].get("values");
+            var powerDetails = data.get("powerDetails") as Dictionary;
+            var meters = powerDetails.get("meters") as Array;
+            var values = meters[0].get("values") as Dictionary;
             var stats = [] as Array<SolarStats>;
             for ( var i = values.size()-1; i >= 0; i-- ) {
                 if ( System.getSystemStats().freeMemory < 2500 ) {
                     break;
                 }
-                stats.add(ProcessSitePower(ResponseType(powerDetails.get("timeUnit")), values[i]));
+                stats.add(ProcessSitePower(ResponseType(powerDetails.get("timeUnit") as String), values[i]));
             }
             _notify.invoke(stats);
         } else {
@@ -231,13 +232,13 @@ enum Pages {
     }
 
     //! Receive the data from the web request
-    public function onEnergyResponse(responseCode as Number, data as Dictionary<String, Object?> or String or Null) as Void {
+    public function onEnergyResponse(responseCode as Number, data as Dictionary or String or Null) as Void {
         if (responseCode == 200 ) {
-            var energy = data.get("energy");
-            var values = energy.get("values");
+            var energy = data.get("energy") as Dictionary;
+            var values = energy.get("values") as Array;
             var stats = [] as Array<SolarStats>;
             for ( var i = values.size()-1; i >= 0; i-- ) {
-                stats.add(ProcessSiteEnergy(ResponseType(energy.get("timeUnit")), values[i]));
+                stats.add( ProcessSiteEnergy(ResponseType(energy.get("timeUnit") as String), values[i]) );
             }
             _notify.invoke(stats);
         } else {
@@ -245,13 +246,13 @@ enum Pages {
         }
     }
 
-    private function ProcessSiteEnergy( period as String, values as Array ) as SolarStats {
+    private function ProcessSiteEnergy( period as String, values as Dictionary ) as SolarStats {
         var _stats = new SolarStats();
 
         _stats.period       = period;
-        _stats.generated    = values.get("value");
+        _stats.generated    = values.get("value") as String;
 
-        var date = Gregorian.utcInfo(ParseDate(values.get("date")), Time.FORMAT_LONG);
+        var date = Gregorian.utcInfo(ParseDate(values.get("date") as String), Time.FORMAT_LONG);
         if ( period.equals("week") ) {
             _stats.date = date.day_of_week;
         } else if ( period.equals("month") ) {
@@ -266,15 +267,15 @@ enum Pages {
         return _stats;
     }
 
-    private function ProcessSitePower( period as String, values as Array ) as SolarStats {
+    private function ProcessSitePower( period as String, values as Dictionary ) as SolarStats {
         var _stats = new SolarStats();
 
-        var date = Gregorian.utcInfo( ParseDate(values.get("date")), Time.FORMAT_SHORT );
+        var date = Gregorian.utcInfo( ParseDate(values.get("date") as String), Time.FORMAT_SHORT );
         _stats.date         = DateString(date);
         _stats.time         = TimeString(date);
 
         _stats.period       = period;
-        _stats.generating   = values.get("value");
+        _stats.generating   = values.get("value") as Number;
 
         return _stats;
     }
@@ -334,12 +335,12 @@ enum Pages {
     // returns Gregorian.Moment based upon date/time string without timezone info.
     // Can be used to create a Gregorian.utcInfo object if you want to convert object 
     // irrespective of timezone and dst
-    private function ParseDate( input as String ) as Gregorian.Moment {
-        return Moment(input.substring(0,4), input.substring(5,7), input.substring(8,10), input.substring(11,13), input.substring(14,16));
+    private function ParseDate( input as String ) {
+        return self.Moment(input.substring(0,4), input.substring(5,7), input.substring(8,10), input.substring(11,13), input.substring(14,16));
     }
 
     // returns Gregorian.Moment object on the basis of UTC time
-    private function Moment( year as String, month as String, day as String, hour as String, minute as String ) as Gregorian.Moment {
+    private function Moment( year as String, month as String, day as String, hour as String, minute as String ) {
         var options = {
             :year => year.toNumber(),
             :month => month.toNumber(),

@@ -44,8 +44,8 @@ enum GraphTypes {
     private var _year = _na_ as String;
     private var _consumed = _na_ as String;
     private var _current = _na_ as String;
-    private var _showconsumption as Boolean = false;
-    private var _errorMessage as WatchUi.TextArea;
+    private var _showconsumption = false as Boolean;
+    private var _errorMessage = _na_ as String;
 
     //! Constructor
     public function initialize() {
