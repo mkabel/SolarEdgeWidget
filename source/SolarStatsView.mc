@@ -76,23 +76,29 @@ enum GraphTypes {
     public function onUpdate(dc as Dc) as Void {
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
         dc.clear();
-        if ( !_error ) {
-            if ( _graph.size() == 0 ) {
-                ShowValues(dc);
-            } 
-            else {
-                switch ( GraphType(_graph[0].period) ) {
-                case lineGraph:
-                    ShowLineGraph(dc, _graph);
-                    break;
-                case barGraph:
-                    ShowBarGraph(dc, _graph);
-                    break;
-                default:
-                    break;
+        try {
+            if ( !_error ) {
+                if ( _graph.size() == 0 ) {
+                    ShowValues(dc);
+                } 
+                else {
+                    switch ( GraphType(_graph[0].period) ) {
+                    case lineGraph:
+                        ShowLineGraph(dc, _graph);
+                        break;
+                    case barGraph:
+                        ShowBarGraph(dc, _graph);
+                        break;
+                    default:
+                        break;
+                    }
                 }
+            } else {
+                ShowError(dc);
             }
-        } else {
+        }
+        catch ( ex instanceof Lang.Exception ) {
+            _message = ex.getErrorMessage();
             ShowError(dc);
         }
     }
@@ -311,6 +317,9 @@ enum GraphTypes {
     }
 
     private function Normalize( maximum as Long, height as Float ) as Float {
+        if ( height == 0.0 ) {
+            throw new Lang.InvalidValueException("Oops, something went wrong");
+        }
         var norm = maximum / height;
 
         if ( norm < 1.0 ) {
