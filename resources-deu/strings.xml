@@ -9,4 +9,5 @@
     <string id="connect">Bitte,\nverbinden Sie\ndas Telefon</string>
     <string id="error">Laden\nfehlgeschlagen\nFehler: </string>
     <string id="unauthorized">Nicht autorisiert,\nin ConnectIQ\nkonfigurieren</string>
+    <string id="invalid">Fehler erkantt! Ungültiger Wert für Methode angegeben</string>
 </resources>

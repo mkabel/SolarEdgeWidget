@@ -9,4 +9,5 @@
     <string id="connect">Please,\nconnect\nPhone</string>
     <string id="error">Failed to load\nError: </string>
     <string id="unauthorized">Unauthorized,\nconfigure in\nConnectIQ</string>
+    <string id="invalid">Exception caught! Invalid value provided to method</string>
 </resources>

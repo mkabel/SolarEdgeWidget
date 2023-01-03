@@ -9,4 +9,5 @@
     <string id="connect">Verbindt telefoon\na.u.b.</string>
     <string id="error">Laden mislukt\nFout: </string>
     <string id="unauthorized">Niet\ngeautoriseerd,\nconfigureer in\nConnectIQ</string>
+    <string id="invalid">Fout gedetecteerd! Ongeldige waarde opgegeven voor methode</string>
 </resources>

@@ -44,6 +44,7 @@ enum GraphTypes {
     private var _year = _na_ as String;
     private var _consumed = _na_ as String;
     private var _current = _na_ as String;
+    private var _invalid = _na_ as String;
     private var _showconsumption = false as Boolean;
     private var _errorMessage = null as WatchUi.TextArea;
 
@@ -62,6 +63,7 @@ enum GraphTypes {
         _consumed   = WatchUi.loadResource($.Rez.Strings.consumed) as String;
         _current    = WatchUi.loadResource($.Rez.Strings.current) as String;
         _last6hours = WatchUi.loadResource($.Rez.Strings.last6hours) as String;
+        _invalid    = WatchUi.loadResource($.Rez.Strings.invalid) as String;
     }
 
     //! Restore the state of the app and prepare the view to be shown
@@ -317,9 +319,7 @@ enum GraphTypes {
     }
 
     private function Normalize( maximum as Long, height as Float ) as Float {
-        if ( height == 0.0 ) {
-            throw new Lang.InvalidValueException("Oops, something went wrong");
-        }
+        PreconditionCheck( height > 0 );
         var norm = maximum / height;
 
         if ( norm < 1.0 ) {
@@ -327,6 +327,12 @@ enum GraphTypes {
         }
 
         return norm;
+    }
+
+    private function PreconditionCheck( valid as Boolean ) {
+        if ( !valid ) {
+            throw new Lang.InvalidValueException(_invalid);
+        }
     }
 
     private function Date( values as SolarStats ) as String {
