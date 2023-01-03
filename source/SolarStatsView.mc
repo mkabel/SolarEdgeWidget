@@ -100,6 +100,9 @@ enum GraphTypes {
             }
         }
         catch ( ex instanceof Lang.Exception ) {
+            ex.printStackTrace();
+
+            // display an error message, not really helpful, but at least no crash
             _message = ex.getErrorMessage();
             ShowError(dc);
         }
@@ -173,7 +176,7 @@ enum GraphTypes {
         var height = wideY;
 
         // normalize power on y-axis
-        var norm = Normalize(maxPower, height);
+        var norm = Normalize(maxPower, 0.0);
 
         dc.setAntiAlias(true);
         dc.setPenWidth(2);
