@@ -45,7 +45,7 @@ enum GraphTypes {
     private var _consumed = _na_ as String;
     private var _current = _na_ as String;
     private var _showconsumption = false as Boolean;
-    private var _errorMessage = _na_ as String;
+    private var _errorMessage = null as WatchUi.TextArea;
 
     //! Constructor
     public function initialize() {
@@ -201,7 +201,7 @@ enum GraphTypes {
                 dc.drawLine(offsetX - stepSize*i, offsetY + 5, offsetX - stepSize*i, offsetY - 5);
 
                 var hour = values[i].time.substring(0,2).toLong();
-                if ( hour % 6 == 0 ) {
+                if ( hour % 3 == 0 ) {
                     dc.drawText(offsetX - stepSize*i, offsetY + 3, Graphics.FONT_SYSTEM_XTINY, hour.toString(), Graphics.TEXT_JUSTIFY_CENTER );
                 }
             }
@@ -216,7 +216,7 @@ enum GraphTypes {
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
         dc.drawText(dc.getWidth() / 2, (dc.getHeight() + height) / 2 + fhTiny, Graphics.FONT_SYSTEM_TINY, Header(values[0]), Graphics.TEXT_JUSTIFY_CENTER);
         if ( values[0].generating != null ) {
-            dc.drawText(dc.getWidth() / 2, (dc.getHeight() - height) / 2 - fhTiny - fhXTiny - 5, Graphics.FONT_SYSTEM_TINY, (CheckValue(values[0].generating)).format("%.0f") + " W", Graphics.TEXT_JUSTIFY_CENTER );
+            dc.drawText(dc.getWidth() / 2, (dc.getHeight() - height) / 2 - fhTiny - fhXTiny - 5, Graphics.FONT_SYSTEM_TINY, (CheckValue(values[0].generating)).format("%.1f") + " W", Graphics.TEXT_JUSTIFY_CENTER );
         } else {
             dc.drawText(dc.getWidth() / 2, (dc.getHeight() - height) / 2 - fhTiny - fhXTiny - 5, Graphics.FONT_SYSTEM_TINY, "Off", Graphics.TEXT_JUSTIFY_CENTER );
         }
@@ -228,7 +228,7 @@ enum GraphTypes {
         var mig  = MaxGenerated(values);
         var mg = values[mig].generated;
         var mic = MaxConsumption(values);
-        var mc = values[mig].consumed;
+        var mc = values[mic].consumed;
 
         var maxIndex = mig;
         var maxPower = mg;
@@ -352,8 +352,8 @@ enum GraphTypes {
         var maxIndex = 0;
         var maxPower = 0;
         for ( var i = 0; i < array.size(); i++ ) {
-            if ( CheckValue(array[i].generated) > maxPower ) {
-                maxPower = array[i].generated;
+            if ( CheckValue(array[i].consumed) > maxPower ) {
+                maxPower = array[i].consumed;
                 maxIndex = i;
             }
         }
