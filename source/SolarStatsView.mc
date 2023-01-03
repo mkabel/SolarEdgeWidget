@@ -120,7 +120,7 @@ enum GraphTypes {
         var fhLarge  = dc.getFontHeight(Graphics.FONT_SYSTEM_LARGE);
         
         var locHeader = dc.getHeight() / 2 - fhXLarge/2 - fhLarge;
-        var locTime = 0.9*dc.getHeight();
+        var locTime = 0.85*dc.getHeight();
         
         var generated = (_stats.generated/1000).format("%.1f");
         var dimGen = dc.getTextDimensions(generated, Graphics.FONT_SYSTEM_NUMBER_THAI_HOT);
