@@ -122,7 +122,8 @@ enum GraphTypes {
         var fhXLarge = dc.getFontHeight(Graphics.FONT_SYSTEM_NUMBER_THAI_HOT);
         var fhLarge  = dc.getFontHeight(Graphics.FONT_SYSTEM_LARGE);
         
-        var locHeader = dc.getHeight() / 2 - fhXLarge/2 - fhLarge;
+        //var locHeader = dc.getHeight() / 2 - fhXLarge/2 - fhLarge;
+        var locHeader = 0.05*dc.getHeight();
         var locTime = 0.85*dc.getHeight();
         
         var generated = (_stats.generated/1000).format("%.1f");
@@ -176,9 +177,11 @@ enum GraphTypes {
         var height = wideY;
 
         // normalize power on y-axis
-        var norm = Normalize(maxPower, 0.0);
+        var norm = Normalize(maxPower, height);
 
-        dc.setAntiAlias(true);
+        if(dc has :setAntiAlias) {
+            dc.setAntiAlias(true);
+        }
         dc.setPenWidth(2);
         dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_BLACK);
         dc.drawLine (0, offsetY, width, offsetY);                       // x-axis
@@ -260,7 +263,9 @@ enum GraphTypes {
         var norm = Normalize(maxPower, height);
 
         // draw axis
-        dc.setAntiAlias(true);
+        if(dc has :setAntiAlias) {
+            dc.setAntiAlias(true);
+        }
         dc.setPenWidth(2);
         dc.setColor(Graphics.COLOR_LT_GRAY, Graphics.COLOR_BLACK);
         dc.drawLine (0, offsetY, width, offsetY);                       // x-axis
@@ -292,7 +297,7 @@ enum GraphTypes {
             var y2 = offsetY - h2;
             
             dc.setPenWidth(2);
-            dc.setColor(Graphics.COLOR_GREEN, Graphics.COLOR_BLACK);
+            dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_BLACK);
             dc.fillRectangle(x1, y1, w, h1);
             if ( _showconsumption ) {
                 dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_BLACK);
