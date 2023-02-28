@@ -179,7 +179,7 @@ enum GraphTypes {
         // normalize power on y-axis
         var norm = Normalize(maxPower, height);
 
-        if(dc has :setAntiAlias) {
+        if (dc has :setAntiAlias) {
             dc.setAntiAlias(true);
         }
         dc.setPenWidth(2);
@@ -263,7 +263,7 @@ enum GraphTypes {
         var norm = Normalize(maxPower, height);
 
         // draw axis
-        if(dc has :setAntiAlias) {
+        if (dc has :setAntiAlias) {
             dc.setAntiAlias(true);
         }
         dc.setPenWidth(2);
