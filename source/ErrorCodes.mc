@@ -1,5 +1,5 @@
 //
-// Copyright 2022 by garmin@ibuyonline.nl
+// Copyright 2022-2023 by garmin@ibuyonline.nl
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and 
 // associated documentation files (the "Software"), to deal in the Software without restriction, 
