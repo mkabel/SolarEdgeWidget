@@ -1,0 +1,313 @@
+//
+// Copyright 2022-2023 by garmin@ibuyonline.nl
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and 
+// associated documentation files (the "Software"), to deal in the Software without restriction, 
+// including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+// and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, 
+// subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all copies or 
+// substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING 
+// BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, 
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+//
+
+import Toybox.System;
+import Toybox.Lang;
+import Toybox.Communications;
+import Toybox.Application.Properties;
+import Toybox.Time.Gregorian;
+
+//! Creates a web request on select events, and browse through day, month and year statistics
+(:background)
+class SolarEdgeAPI extends SolarAPI {
+    private var _baseUrl = "https://monitoringapi.solaredge.com/site/";
+    private var _sysid = $._sysid_ as Long;
+    private var _apikey = $._apikey_ as String;
+    private var _startDate = "2022-01-01";
+    private var _errormessage as String;
+    private var _unauthorized as String;
+
+    //! Set up the callback to the view
+    //! @param handler Callback method for when data is received
+    public function initialize(handler as Method(args as SolarStats or Array or String or Null) as Void) {
+        SolarAPI.initialize(handler);
+
+        _errormessage = Application.loadResource($.Rez.Strings.error) as String;
+        _unauthorized = Application.loadResource($.Rez.Strings.unauthorized) as String;
+
+        ReadSettings();
+        getDataPeriod();
+}
+
+    private function ReadSettings() {
+        _sysid  = Properties.getValue($.sysid);
+        _apikey = Properties.getValue($.api);
+    }
+
+    public function getStatus() as Void {
+        var url = _baseUrl + _sysid + "/overview";
+
+        var params = {           // set the parameters
+            "api_key" => _apikey,
+        };
+
+        var options = {
+			:method => Communications.HTTP_REQUEST_METHOD_GET
+		};
+
+        Communications.makeWebRequest( url, params, options, method(:onReceiveOverview) );
+    }
+
+    public function getHistory( date as Gregorian.Info ) as Void {
+        var moment = new Time.Moment(Time.now().value());
+        var now = Gregorian.info(moment,Time.FORMAT_SHORT );
+        
+        getPower( DateTimeString(date), DateTimeString(now) );
+    }
+
+    public function getDayGraph( df as Gregorian.Info, dt as Gregorian.Info ) as Void {
+        getEnergy("DAY", DateString(df), DateString(dt));
+    }
+
+    public function getMonthGraph( df as Gregorian.Info, dt as Gregorian.Info ) as Void {
+        getEnergy("MONTH", DateString(df), DateString(dt));
+    }
+
+    public function getYearGraph( date as Gregorian.Info ) as Void {
+        getEnergy("YEAR", _startDate, DateString(date));
+    }
+
+    //! Query the statistics of the PV System for the specified periods
+    private function getDataPeriod() as Void {
+        var url = _baseUrl + _sysid + "/dataPeriod";
+
+        var params = {           // set the parameters
+            "api_key" => _apikey,
+        };
+
+        var options = {
+			:method => Communications.HTTP_REQUEST_METHOD_GET
+		};
+
+        Communications.makeWebRequest( url, params, options, method(:onReceiveDataPeriod) );
+    }
+
+
+    private function getPower( tf as String, tt as String ) as Void {
+        var url = _baseUrl + _sysid + "/powerDetails";
+
+        var params = {
+            "api_key"   => _apikey,
+            "startTime" => tf,
+            "endTime"   => tt,
+        };
+
+        var options = {
+			:method => Communications.HTTP_REQUEST_METHOD_GET
+		};
+
+        Communications.makeWebRequest( url, params, options, method(:onPowerResponse) );
+
+    }
+
+    //! Query the statistics of the PV System for the specified periods
+    private function getEnergy( unit as String, df as String, dt as String) as Void {
+        var url = _baseUrl + _sysid + "/energy";
+
+        var params = {
+            "api_key"   => _apikey,
+            "startDate" => df,
+            "endDate"   => dt,
+            "timeUnit"  => unit
+        };
+
+        var options = {
+			:method => Communications.HTTP_REQUEST_METHOD_GET
+		};
+
+        Communications.makeWebRequest( url, params, options, method(:onEnergyResponse) );
+    }
+
+    //! Receive the data from the web request
+    public function onReceiveOverview(responseCode as Number, data as Dictionary or String or Null) as Void {
+        if (responseCode == 200 ) {
+            var overview = data.get("overview") as Dictionary;
+            var lastUpdate = overview.get("lastUpdateTime") as String;
+            
+            var currentPower = overview.get("currentPower") as Dictionary;
+            var power = currentPower.get("power") as String;
+            
+            var lastDay = overview.get("lastDayData") as Dictionary;
+            var energy = lastDay.get("energy") as String;
+            
+            var stats = new SolarStats();
+            stats.period     = "day";
+            var date         = Gregorian.utcInfo( ParseDate(lastUpdate), Time.FORMAT_SHORT );
+            stats.date       = DateString(date);
+            stats.time       = TimeString(date);
+            stats.generated  = energy;
+            stats.generating = power;
+
+            _notify.invoke(stats);
+        } else {
+            ProcessError(responseCode, data);
+        }
+    }
+
+    //! Receive the data from the web request
+    public function onReceiveDataPeriod(responseCode as Number, data as Dictionary or String or Null) as Void {
+        if (responseCode == 200 ) {
+            var dataPeriod = data.get("dataPeriod") as Dictionary;
+            _startDate = dataPeriod.get("startDate");
+        } else {
+            ProcessError(responseCode, data);
+        }
+    }
+
+    //! Receive the data from the web request
+    public function onPowerResponse( responseCode as Number, data as Dictionary or String or Null ) as Void {
+        if (responseCode == 200) {
+            var powerDetails = data.get("powerDetails") as Dictionary;
+            var meters = powerDetails.get("meters") as Array;
+            var values = meters[0].get("values") as Dictionary;
+            var stats = [] as Array<SolarStats>;
+            for ( var i = values.size()-1; i >= 0; i-- ) {
+                if ( System.getSystemStats().freeMemory < 2500 ) {
+                    break;
+                }
+                stats.add(ProcessSitePower(ResponseType(powerDetails.get("timeUnit") as String), values[i]));
+            }
+            _notify.invoke(stats);
+        } else {
+            ProcessError(responseCode, data);
+        }
+    }
+
+    //! Receive the data from the web request
+    public function onEnergyResponse(responseCode as Number, data as Dictionary or String or Null) as Void {
+        if (responseCode == 200 ) {
+            var energy = data.get("energy") as Dictionary;
+            var values = energy.get("values") as Array;
+            var stats = [] as Array<SolarStats>;
+            for ( var i = values.size()-1; i >= 0; i-- ) {
+                stats.add( ProcessSiteEnergy(ResponseType(energy.get("timeUnit") as String), values[i]) );
+            }
+            _notify.invoke(stats);
+        } else {
+            ProcessError(responseCode, data);
+        }
+    }
+
+    private function ProcessSiteEnergy( period as String, values as Dictionary ) as SolarStats {
+        var _stats = new SolarStats();
+
+        _stats.period       = period;
+        _stats.generated    = values.get("value") as String;
+
+        var date = Gregorian.utcInfo(ParseDate(values.get("date") as String), Time.FORMAT_LONG);
+        if ( period.equals("week") ) {
+            _stats.date = date.day_of_week;
+        } else if ( period.equals("month") ) {
+            _stats.date = date.month;
+        } else if ( period.equals("year") ) {
+            _stats.date = date.year.toString();
+        } else {
+            _stats.date = date;
+        }
+        _stats.time = TimeString(date);
+
+        return _stats;
+    }
+
+    private function ProcessSitePower( period as String, values as Dictionary ) as SolarStats {
+        var _stats = new SolarStats();
+
+        var date = Gregorian.utcInfo( ParseDate(values.get("date") as String), Time.FORMAT_SHORT );
+        _stats.date         = DateString(date);
+        _stats.time         = TimeString(date);
+
+        _stats.period       = period;
+        _stats.generating   = values.get("value") as Number;
+
+        return _stats;
+    }
+
+    public function ProcessError( responseCode as Number, data as String ) {
+        if ( responseCode == 403 ) {
+            _notify.invoke(_unauthorized);
+        } else {
+            var message = CommunicationsError.Message(responseCode);
+            if ( message != null ) {
+                _notify.invoke(message);
+            } else {
+                _notify.invoke(_errormessage + responseCode.toString());
+            }
+        }
+    }
+
+    private function ResponseType( unit as String ) as String {
+        var type = "n/a";
+
+        if ( unit.equals("QUARTER_OF_AN_HOUR") ) {
+            type = "history";
+        } else if ( unit.equals("DAY") ) {
+            type = "week";
+        } else if ( unit.equals("MONTH") ) {
+            type = "month";
+        } else if ( unit.equals("YEAR") ) {
+            type = "year";
+        }
+
+        return type;
+    }
+
+    // returns Gregorian.Moment based upon date/time string without timezone info.
+    // Can be used to create a Gregorian.utcInfo object if you want to convert object 
+    // irrespective of timezone and dst
+    private function ParseDate( input as String ) {
+        return self.Moment(input.substring(0,4), input.substring(5,7), input.substring(8,10), input.substring(11,13), input.substring(14,16));
+    }
+
+    // returns Gregorian.Moment object on the basis of UTC time
+    private function Moment( year as String, month as String, day as String, hour as String, minute as String ) {
+        var options = {
+            :year => year.toNumber(),
+            :month => month.toNumber(),
+            :day => day.toNumber(),
+            :hour => hour.toNumber(),
+            :minute => minute.toNumber()
+        };
+        return Gregorian.moment(options);
+    }
+
+    private function DateTimeString( date as Gregorian.Info ) as String {
+        return DateString(date) + " " + TimeString(date);
+    }
+
+    protected function DateString( date as Gregorian.Info ) as String {
+        return Lang.format(
+            "$1$-$2$-$3$",
+            [
+                date.year,
+                date.month.format("%02d"),
+                date.day.format("%02d")
+            ]
+        );
+    }
+
+    private function TimeString( date as Gregorian.Info ) as String {
+        return Lang.format(
+            "$1$:$2$:00",
+            [
+                date.hour.format("%02d"),
+                date.min.format("%02d")
+            ]
+        );
+    }
+}
