@@ -122,15 +122,14 @@ class SolarStatsView extends WatchUi.View {
         var fhXLarge = dc.getFontHeight(Graphics.FONT_SYSTEM_NUMBER_THAI_HOT);
         var fhLarge  = dc.getFontHeight(Graphics.FONT_SYSTEM_LARGE);
         
-        //var locHeader = dc.getHeight() / 2 - fhXLarge/2 - fhLarge;
         var locHeader = 0.05*dc.getHeight();
-        var locTime = 0.85*dc.getHeight();
+        var locTime = 0.82*dc.getHeight();
         
         var generated = (_stats.generated/1000).format("%.1f");
         var dimGen = dc.getTextDimensions(generated, Graphics.FONT_SYSTEM_NUMBER_THAI_HOT);
 
         var genX = dc.getWidth() / 2;
-        var genY = dc.getHeight() / 2;
+        var genY = dc.getHeight() / 2 - dc.getHeight()*0.03;
         var kWhX = genX + dimGen[0]/2 + 2;
         var prodY = genY + fhXLarge/2;
 
@@ -156,7 +155,7 @@ class SolarStatsView extends WatchUi.View {
 
         dc.drawText(dc.getWidth() / 2, locTime, 
                                 Graphics.FONT_SYSTEM_XTINY, 
-                                "@ " + _stats.time.substring(0,5), 
+                                "@" + _stats.time.substring(0,5), 
                                 Graphics.TEXT_JUSTIFY_CENTER );
     }
 
