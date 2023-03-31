@@ -343,16 +343,21 @@ class SolarStatsView extends WatchUi.View {
     }
 
     private function Date( stats as SolarStats ) as String {
+        var dI = DateStringToInfo(stats.date);
+
         var dateString = stats.date;
-        if ( stats.period == weekStats ) {
-            var dI = DateStringToInfo(stats.date);
-            dateString = dI.day_of_week.substring(0,1);
-        } else if ( stats.period == monthStats ) {
-            var dI = DateStringToInfo(stats.date);
-            dateString = dI.month;
-        } else if ( stats.period == yearStats ) {
-            var dI = DateStringToInfo(stats.date);
-            dateString = dI.year.toString();
+        switch ( stats.period ) {
+            case weekStats:
+                dateString = dI.day_of_week.substring(0,1);
+                break;
+            case monthStats:
+                dateString = dI.month;
+                break;
+            case yearStats:
+                dateString = dI.year.toString();
+                break;
+            default:
+                break;
         }
         return dateString;
     }
