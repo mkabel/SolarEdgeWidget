@@ -48,6 +48,7 @@ var _communicationsError = {
     Communications.UNABLE_TO_PROCESS_HLS                            => "HLS content could not be downloaded. Most often occurs when requested and provided bit rates do not match."
 };
 
+(:background)
 class CommunicationsError {
     public function Message( errorCode as Lang.Number ) as Lang.String {
         return _communicationsError.get(errorCode);

@@ -7,7 +7,7 @@
     <string id="consumed">Verbraucht</string>
     <string id="current">Aktuell</string>
     <string id="connect">Bitte,\nverbinden Sie\ndas Telefon</string>
-    <string id="error">Laden\nfehlgeschlagen\nFehler: </string>
-    <string id="unauthorized">Nicht autorisiert,\nin ConnectIQ\nkonfigurieren</string>
-    <string id="invalid">Fehler erkantt! Ungültiger Wert für Methode angegeben</string>
+    <string id="error" scope="background">Laden\nfehlgeschlagen\nFehler: </string>
+    <string id="unauthorized" scope="background">Nicht autorisiert,\nin ConnectIQ\nkonfigurieren</string>
+    <string id="invalid" scope="background">Fehler erkantt! Ungültiger Wert für Methode angegeben</string>
 </resources>

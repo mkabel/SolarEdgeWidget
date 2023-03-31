@@ -147,10 +147,9 @@ class SolarEdgeAPI extends SolarAPI {
             var energy = lastDay.get("energy") as String;
             
             var stats = new SolarStats();
-            stats.period     = "day";
-            var date         = Gregorian.utcInfo( ParseDate(lastUpdate), Time.FORMAT_SHORT );
-            stats.date       = DateString(date);
-            stats.time       = TimeString(date);
+            stats.period     = currentStats;
+            stats.date       = ParseDateString(lastUpdate);
+            stats.time       = ParseTimeString(lastUpdate);
             stats.generated  = energy;
             stats.generating = power;
 
@@ -196,7 +195,7 @@ class SolarEdgeAPI extends SolarAPI {
             var values = energy.get("values") as Array;
             var stats = [] as Array<SolarStats>;
             for ( var i = values.size()-1; i >= 0; i-- ) {
-                stats.add( ProcessSiteEnergy(ResponseType(energy.get("timeUnit") as String), values[i]) );
+                stats.add(ProcessSiteEnergy(ResponseType(energy.get("timeUnit") as String), values[i]));
             }
             _notify.invoke(stats);
         } else {
@@ -204,36 +203,24 @@ class SolarEdgeAPI extends SolarAPI {
         }
     }
 
-    private function ProcessSiteEnergy( period as String, values as Dictionary ) as SolarStats {
+    private function ProcessSiteEnergy( period as Statistics, values as Dictionary ) as SolarStats {
         var _stats = new SolarStats();
 
+        _stats.date         = ParseDateString(values.get("date") as String);
+        _stats.time         = ParseTimeString(values.get("date") as String);
         _stats.period       = period;
-        _stats.generated    = values.get("value") as String;
-
-        var date = Gregorian.utcInfo(ParseDate(values.get("date") as String), Time.FORMAT_LONG);
-        if ( period.equals("week") ) {
-            _stats.date = date.day_of_week;
-        } else if ( period.equals("month") ) {
-            _stats.date = date.month;
-        } else if ( period.equals("year") ) {
-            _stats.date = date.year.toString();
-        } else {
-            _stats.date = date;
-        }
-        _stats.time = TimeString(date);
+        _stats.generated    = CheckFloat(values.get("value") as Float);
 
         return _stats;
     }
 
-    private function ProcessSitePower( period as String, values as Dictionary ) as SolarStats {
+    private function ProcessSitePower( period as Statistics, values as Dictionary ) as SolarStats {
         var _stats = new SolarStats();
 
-        var date = Gregorian.utcInfo( ParseDate(values.get("date") as String), Time.FORMAT_SHORT );
-        _stats.date         = DateString(date);
-        _stats.time         = TimeString(date);
-
+        _stats.date         = ParseDateString(values.get("date") as String);
+        _stats.time         = ParseTimeString(values.get("date") as String);
         _stats.period       = period;
-        _stats.generating   = values.get("value") as Number;
+        _stats.generating   = CheckFloat(values.get("value") as Float);
 
         return _stats;
     }
@@ -251,39 +238,28 @@ class SolarEdgeAPI extends SolarAPI {
         }
     }
 
-    private function ResponseType( unit as String ) as String {
-        var type = "n/a";
+    private function ResponseType( unit as String ) as Statistics {
+        var type = unknown;
 
         if ( unit.equals("QUARTER_OF_AN_HOUR") ) {
-            type = "history";
+            type = dayStats;
         } else if ( unit.equals("DAY") ) {
-            type = "week";
+            type = weekStats;
         } else if ( unit.equals("MONTH") ) {
-            type = "month";
+            type = monthStats;
         } else if ( unit.equals("YEAR") ) {
-            type = "year";
+            type = yearStats;
         }
 
         return type;
     }
 
-    // returns Gregorian.Moment based upon date/time string without timezone info.
-    // Can be used to create a Gregorian.utcInfo object if you want to convert object 
-    // irrespective of timezone and dst
-    private function ParseDate( input as String ) {
-        return self.Moment(input.substring(0,4), input.substring(5,7), input.substring(8,10), input.substring(11,13), input.substring(14,16));
+    private function ParseDateString( input as String ) as String {
+        return input.substring(0,10);
     }
 
-    // returns Gregorian.Moment object on the basis of UTC time
-    private function Moment( year as String, month as String, day as String, hour as String, minute as String ) {
-        var options = {
-            :year => year.toNumber(),
-            :month => month.toNumber(),
-            :day => day.toNumber(),
-            :hour => hour.toNumber(),
-            :minute => minute.toNumber()
-        };
-        return Gregorian.moment(options);
+    private function ParseTimeString( input as String ) as String {
+        return input.substring(11,16);
     }
 
     private function DateTimeString( date as Gregorian.Info ) as String {
@@ -310,4 +286,41 @@ class SolarEdgeAPI extends SolarAPI {
             ]
         );
     }
+}
+
+//! convert string into a substring array
+(:background)
+public function ParseString(delimiter as String, data as String) as Array {
+    var result = [] as Array<String>;
+    var endIndex = 0;
+    var subString;
+    
+    while (endIndex != null) {
+        endIndex = data.find(delimiter);
+        if ( endIndex != null ) {
+            subString = data.substring(0, endIndex) as String;
+            data = data.substring(endIndex+1, data.length());
+        } else {
+            subString = data;
+        }
+        result.add(subString);
+    }
+
+    return result;
+}
+
+(:background)
+public function CheckLong( value as Long ) as Long {
+    if ( value == null ) {
+        value = NaN;
+    }
+    return value;
+}
+
+(:background)
+public function CheckFloat( value as Float ) as Float {
+    if ( value == null ) {
+        value = NaN;
+    }
+    return value;
 }

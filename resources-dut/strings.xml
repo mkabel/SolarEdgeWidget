@@ -7,7 +7,7 @@
     <string id="consumed">Verbruik</string>
     <string id="current">Huidig</string>
     <string id="connect">Verbindt telefoon\na.u.b.</string>
-    <string id="error">Laden mislukt\nFout: </string>
-    <string id="unauthorized">Niet\ngeautoriseerd,\nconfigureer in\nConnectIQ</string>
-    <string id="invalid">Fout gedetecteerd! Ongeldige waarde opgegeven voor methode</string>
+    <string id="error" scope="background">Laden mislukt\nFout: </string>
+    <string id="unauthorized" scope="background">Niet\ngeautoriseerd,\nconfigureer in\nConnectIQ</string>
+    <string id="invalid" scope="background">Fout gedetecteerd! Ongeldige waarde opgegeven voor methode</string>
 </resources>

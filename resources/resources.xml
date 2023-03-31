@@ -7,7 +7,7 @@
     <string id="consumed">Consumed</string>
     <string id="current">Current</string>
     <string id="connect">Please,\nconnect\nPhone</string>
-    <string id="error">Failed to load\nError: </string>
-    <string id="unauthorized">Unauthorized,\nconfigure in\nConnectIQ</string>
-    <string id="invalid">Exception caught! Invalid value provided to method</string>
+    <string id="error" scope="background">Failed to load\nError: </string>
+    <string id="unauthorized" scope="background">Unauthorized,\nconfigure in\nConnectIQ</string>
+    <string id="invalid" scope="background">Exception caught! Invalid value provided to method</string>
 </resources>

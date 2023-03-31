@@ -20,23 +20,38 @@
 import Toybox.Application;
 import Toybox.Lang;
 import Toybox.WatchUi;
+import Toybox.System;
+import Toybox.Background;
 
 //! This app retrieves Solar Panel (PV) statistics from the SolarEdge server
-(:glance) class SolarEdgeWidget extends Application.AppBase {
+(:background)
+class SolarEdgeWidget extends Application.AppBase {
+    public var status = null as SolarStats;
 
-    //! Constructor
+        //! Constructor
     public function initialize() {
         AppBase.initialize();
+
+        status = new SolarStats();
+
+        if(Background.getTemporalEventRegisteredTime() == null) {
+            Background.registerForTemporalEvent(new Time.Duration(5 * 60));
+        }
     }
 
     //! Handle app startup
     //! @param state Startup arguments
     public function onStart(state as Dictionary?) as Void {
+        var stored = Storage.getValue("status");
+        if ( stored != null ) {
+            status.set(stored);
+        }
     }
 
     //! Handle app shutdown
     //! @param state Shutdown arguments
     public function onStop(state as Dictionary?) as Void {
+        Storage.setValue("status", status.toString());
     }
 
     //! Return the initial view for the app
@@ -45,5 +60,21 @@ import Toybox.WatchUi;
         var view = new $.SolarStatsView();
         var delegate = new $.SolarStatsDelegate(view.method(:onReceive));
         return [view, delegate] as Array<Views or InputDelegates>;
+    }
+
+    public function getServiceDelegate() as Lang.Array<System.ServiceDelegate> {
+        return [ new BackgroundTimerServiceDelegate() ];
+    }    
+
+    (:glance)
+    public function getGlanceView() as Array<GlanceView>? {
+        var view = new $.SolarStatsGlanceView();
+        return [view] as Array<GlanceView>;
+    }
+
+    public function onBackgroundData(data as Application.PersistableType) as Void {
+        if ( data != false ) {
+            status.set(data);
+        }
     }
 }

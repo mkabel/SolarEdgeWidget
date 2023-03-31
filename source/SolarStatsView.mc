@@ -32,7 +32,7 @@ enum GraphTypes {
 }
 
 //! Shows the SolarEdge Solar panel results
-(:glance) class SolarStatsView extends WatchUi.View {
+class SolarStatsView extends WatchUi.View {
     private var _stats = new SolarStats();
     private var _graph = [] as Array;
     private var _error as Boolean = false;
@@ -68,9 +68,10 @@ enum GraphTypes {
 
     //! Restore the state of the app and prepare the view to be shown
     public function onShow() as Void {
-        _stats.generated = Storage.getValue("generated") as Float;
-        _stats.consumed  = Storage.getValue("consumed") as Float;
-        _stats.time      = Storage.getValue("time") as String;
+        var stored = Storage.getValue("status");
+        if ( stored != null ) {
+            _stats.set(stored);
+        }
     }
 
     //! Update the view
@@ -110,14 +111,13 @@ enum GraphTypes {
 
     private function GraphType( period as String ) as GraphTypes {
         var gt = barGraph as GraphTypes;
-        if ( period.equals("history") ) {
+        if ( period == dayStats ) {
             gt = lineGraph;
         }
         return gt;
     }
 
     private function ShowValues(dc as Dc) {
-        CheckValues();
 
         var fhXLarge = dc.getFontHeight(Graphics.FONT_SYSTEM_NUMBER_THAI_HOT);
         var fhLarge  = dc.getFontHeight(Graphics.FONT_SYSTEM_LARGE);
@@ -194,10 +194,10 @@ enum GraphTypes {
         }
 
         var fX = offsetX;
-        var fY = offsetY - (CheckValue(values[0].generating) / norm).toLong();
+        var fY = offsetY - (values[0].generating / norm).toLong();
         for ( var i = 1; i < values.size(); i++ ) {
             var tX = offsetX - stepSize*i;
-            var tY = offsetY - (CheckValue(values[i].generating) / norm).toLong();
+            var tY = offsetY - (values[i].generating / norm).toLong();
             
             dc.setPenWidth(2);
             dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_BLACK);
@@ -230,11 +230,11 @@ enum GraphTypes {
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
         dc.drawText(dc.getWidth() / 2, (dc.getHeight() + height) / 2 + fhTiny, Graphics.FONT_SYSTEM_TINY, Header(values[0]), Graphics.TEXT_JUSTIFY_CENTER);
         if ( values[0].generating != null ) {
-            dc.drawText(dc.getWidth() / 2, (dc.getHeight() - height) / 2 - fhTiny - fhXTiny - 5, Graphics.FONT_SYSTEM_TINY, (CheckValue(values[0].generating)).format("%.1f") + " W", Graphics.TEXT_JUSTIFY_CENTER );
+            dc.drawText(dc.getWidth() / 2, (dc.getHeight() - height) / 2 - fhTiny - fhXTiny - 5, Graphics.FONT_SYSTEM_TINY, (values[0].generating).format("%.1f") + " W", Graphics.TEXT_JUSTIFY_CENTER );
         } else {
             dc.drawText(dc.getWidth() / 2, (dc.getHeight() - height) / 2 - fhTiny - fhXTiny - 5, Graphics.FONT_SYSTEM_TINY, "Off", Graphics.TEXT_JUSTIFY_CENTER );
         }
-        dc.drawText(dc.getWidth() / 2, (dc.getHeight() - height) / 2 - fhXTiny - 5, Graphics.FONT_SYSTEM_XTINY, "Max: " + (CheckValue(values[maxIndex].generating)).format("%.0f") + " W @ " + values[maxIndex].time.substring(0,5), Graphics.TEXT_JUSTIFY_CENTER );
+        dc.drawText(dc.getWidth() / 2, (dc.getHeight() - height) / 2 - fhXTiny - 5, Graphics.FONT_SYSTEM_XTINY, "Max: " + (values[maxIndex].generating).format("%.0f") + " W @ " + values[maxIndex].time.substring(0,5), Graphics.TEXT_JUSTIFY_CENTER );
     }
 
     private function ShowBarGraph(dc as Dc, values as Array<SolarStats>) {
@@ -291,8 +291,8 @@ enum GraphTypes {
             var x1 = offsetX - stepSize*(i+1) + 5;
             var x2 = x1 - 3;
             var w = stepSize - 10;
-            var h1 = (CheckValue(values[i].generated) / norm).toLong();
-            var h2 = (CheckValue(values[i].consumed) / norm).toLong();
+            var h1 = (values[i].generated / norm).toLong();
+            var h2 = (values[i].consumed / norm).toLong();
             var y1 = offsetY - h1;
             var y2 = offsetY - h2;
             
@@ -320,9 +320,9 @@ enum GraphTypes {
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
         dc.drawText(dc.getWidth() / 2, (dc.getHeight() + height) / 2 + fhXTiny, Graphics.FONT_SYSTEM_TINY, Header(values[0]), Graphics.TEXT_JUSTIFY_CENTER);
-        dc.drawText(dc.getWidth() / 2, (dc.getHeight() - height) / 2 - fhTiny - fhXTiny - 5, Graphics.FONT_SYSTEM_TINY, ((CheckValue(values[0].generated)/1000).toFloat()).format("%.0f") + " kWh", Graphics.TEXT_JUSTIFY_CENTER );
+        dc.drawText(dc.getWidth() / 2, (dc.getHeight() - height) / 2 - fhTiny - fhXTiny - 5, Graphics.FONT_SYSTEM_TINY, ((values[0].generated/1000).toFloat()).format("%.0f") + " kWh", Graphics.TEXT_JUSTIFY_CENTER );
         if ( _showconsumption ) {
-            dc.drawText(dc.getWidth() / 2, (dc.getHeight() - height) / 2 - fhXTiny - 5, Graphics.FONT_SYSTEM_XTINY, _consumed + ": " + ((CheckValue(values[0].consumed)/1000).toFloat()).format("%.0f") + " kWh", Graphics.TEXT_JUSTIFY_CENTER );
+            dc.drawText(dc.getWidth() / 2, (dc.getHeight() - height) / 2 - fhXTiny - 5, Graphics.FONT_SYSTEM_XTINY, _consumed + ": " + ((values[0].consumed/1000).toFloat()).format("%.0f") + " kWh", Graphics.TEXT_JUSTIFY_CENTER );
         }
     }
 
@@ -343,15 +343,26 @@ enum GraphTypes {
         }
     }
 
-    private function Date( values as SolarStats ) as String {
-        return values.date;
+    private function Date( stats as SolarStats ) as String {
+        var dateString = stats.date;
+        if ( stats.period == weekStats ) {
+            var dI = DateStringToInfo(stats.date);
+            dateString = dI.day_of_week.substring(0,1);
+        } else if ( stats.period == monthStats ) {
+            var dI = DateStringToInfo(stats.date);
+            dateString = dI.month;
+        } else if ( stats.period == yearStats ) {
+            var dI = DateStringToInfo(stats.date);
+            dateString = dI.year.toString();
+        }
+        return dateString;
     }
 
     private function MaxGenerated( array as Array<SolarStats> ) as Number {
         var maxIndex = 0;
         var maxPower = 0;
         for ( var i = 0; i < array.size(); i++ ) {
-            if ( CheckValue(array[i].generated) > maxPower ) {
+            if ( array[i].generated > maxPower ) {
                 maxPower = array[i].generated;
                 maxIndex = i;
             }
@@ -363,7 +374,7 @@ enum GraphTypes {
         var maxIndex = 0;
         var maxPower = 0;
         for ( var i = 0; i < array.size(); i++ ) {
-            if ( CheckValue(array[i].generating) > maxPower ) {
+            if ( array[i].generating > maxPower ) {
                 maxPower = array[i].generating;
                 maxIndex = i;
             }
@@ -375,7 +386,7 @@ enum GraphTypes {
         var maxIndex = 0;
         var maxPower = 0;
         for ( var i = 0; i < array.size(); i++ ) {
-            if ( CheckValue(array[i].consumed) > maxPower ) {
+            if ( array[i].consumed > maxPower ) {
                 maxPower = array[i].consumed;
                 maxIndex = i;
             }
@@ -396,49 +407,49 @@ enum GraphTypes {
         _errorMessage.draw(dc);
     }
 
-    private function CheckValue( value as Long ) as Long {
-        if ( value == null ) {
-            value = NaN;
-        }
-        return value;
-    }
-
     private function Header( stats as SolarStats ) as String {
         var header = _na_;
-        if ( stats.period.equals("day") ) {
-            header = _today;
-        } else if ( stats.period.equals("history") ) {
-            header = _today;
-        } else if ( stats.period.equals("week") ) {
-            header = _day;
-        } else if ( stats.period.equals("month") ) {
-            header = _month;
-        } else if ( stats.period.equals("year") ) {
-            header = _year;
+        switch ( stats.period ) {
+            case currentStats:
+                header = _today;
+                break;
+            case dayStats:
+                header = _last6hours;
+                break;
+            case weekStats:
+                header = _day;
+                break;
+            case monthStats:
+                header = _month;
+                break;
+            case yearStats:
+                header = _year;
+                break;
+            default:
+                break;
         }
         return header;
     }
 
-    private function CheckValues() {
-        _stats.generated    = CheckValue(_stats.generated);
-        _stats.consumed     = CheckValue(_stats.consumed);
-        _stats.generating   = CheckValue(_stats.generating);
-        _stats.consuming    = CheckValue(_stats.consuming);
+    private function DateStringToInfo(dateString as String ) as Gregorian.Info {
+        return DateInfo(dateString.substring(0,4), dateString.substring(5,7), dateString.substring(8,10));
+    }
 
-        if ( _stats.time == null ) {
-            _stats.time = "n/a";
-        }
-        if ( _stats.period == null ) {
-            _stats.period = "n/a";
-        }
+    private function DateInfo( year as String, month as String, day as String ) as Gregorian.Info {
+        var options = {
+            :year => year.toNumber(),
+            :month => month.toNumber(),
+            :day => day.toNumber(),
+            :hour => 0,
+            :minute => 0
+        };
+        return Gregorian.utcInfo(Gregorian.moment(options), Time.FORMAT_LONG);
     }
 
     //! Called when this View is removed from the screen. Save the
     //! state of your app here.
     public function onHide() as Void {
-        Storage.setValue("generated", _stats.generated);
-        Storage.setValue("consumed",  _stats.consumed);
-        Storage.setValue("time",      _stats.time);
+        Storage.setValue("status", _stats.toString());
     }
 
     //! Show the result or status of the web request
