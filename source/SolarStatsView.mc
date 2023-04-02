@@ -82,7 +82,7 @@ class SolarStatsView extends WatchUi.View {
         try {
             if ( !_error ) {
                 if ( _graph.size() == 0 ) {
-                    ShowValues(dc);
+                    ShowGeneration(dc);
                 } 
                 else {
                     switch ( GraphType(_graph[0].period) ) {
@@ -117,7 +117,7 @@ class SolarStatsView extends WatchUi.View {
         return gt;
     }
 
-    private function ShowValues(dc as Dc) {
+    private function ShowGeneration(dc as Dc) {
 
         var fhXLarge = dc.getFontHeight(Graphics.FONT_SYSTEM_NUMBER_THAI_HOT);
         var fhLarge  = dc.getFontHeight(Graphics.FONT_SYSTEM_LARGE);
@@ -157,6 +157,31 @@ class SolarStatsView extends WatchUi.View {
                                 Graphics.FONT_SYSTEM_XTINY, 
                                 "@" + _stats.time.substring(0,5), 
                                 Graphics.TEXT_JUSTIFY_CENTER );
+    }
+
+    private function ShowValues(dc as Dc) {
+        var fhLarge = dc.getFontHeight(Graphics.FONT_SYSTEM_LARGE);
+        var fhXTiny = dc.getFontHeight(Graphics.FONT_SYSTEM_XTINY);
+        var fhTiny  = dc.getFontHeight(Graphics.FONT_SYSTEM_TINY);
+        
+        var locHeader = dc.getHeight() / 2 - 2*fhLarge - fhTiny;
+        var locGenerated = locHeader;
+        var locGeneration = locHeader;
+        var locConsumed = dc.getHeight() / 2 + 15;
+        var locConsumption = locConsumed + fhTiny;
+        var locTime = dc.getHeight() / 2 + 2*fhLarge;
+
+        locGenerated = locGenerated + fhLarge + 5;
+        locGeneration = locGenerated + fhLarge;
+
+        dc.drawText(dc.getWidth() / 2, locHeader, Graphics.FONT_LARGE, Header(_stats), Graphics.TEXT_JUSTIFY_CENTER );
+        
+        dc.drawText(dc.getWidth() / 2, locGenerated, Graphics.FONT_SYSTEM_LARGE, (_stats.generated/1000).format("%.1f") + " kWh", Graphics.TEXT_JUSTIFY_CENTER );
+        dc.drawText(dc.getWidth() / 2, locGeneration, Graphics.FONT_SYSTEM_XTINY, _current + ": " + _stats.generating.format("%.0f") + " W", Graphics.TEXT_JUSTIFY_CENTER );
+        dc.drawText(dc.getWidth() / 2, locTime, Graphics.FONT_SYSTEM_XTINY, "@ " + _stats.time.substring(0,5), Graphics.TEXT_JUSTIFY_CENTER );
+
+        dc.drawText(dc.getWidth() / 2, locConsumed, Graphics.FONT_SYSTEM_TINY, _consumed + ": " + (_stats.consumed/1000).format("%.1f")+ " kWh", Graphics.TEXT_JUSTIFY_CENTER );
+        dc.drawText(dc.getWidth() / 2, locConsumption, Graphics.FONT_SYSTEM_XTINY, _current + ": " + _stats.consuming + " W", Graphics.TEXT_JUSTIFY_CENTER );
     }
 
     private function ShowLineGraph(dc as Dc, values as Array<SolarStats>) {
