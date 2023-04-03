@@ -50,7 +50,7 @@ var _communicationsError = {
 
 (:background)
 class CommunicationsError {
-    public function Message( errorCode as Lang.Number ) as Lang.String {
+    public function Message( errorCode as Number ) as String {
         return _communicationsError.get(errorCode);
     }
 }
