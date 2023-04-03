@@ -31,7 +31,7 @@ enum GraphTypes {
     barGraph
 }
 
-//! Shows the SolarEdge Solar panel results
+//! Shows the Solar panel results
 class SolarStatsView extends WatchUi.View {
     private var _stats = new SolarStats();
     private var _graph = [] as Array;
@@ -51,6 +51,7 @@ class SolarStatsView extends WatchUi.View {
     //! Constructor
     public function initialize() {
         WatchUi.View.initialize();
+        //_showconsumption = Properties.getValue($.consumption);
     }
 
     //! Load your resources here
@@ -82,7 +83,11 @@ class SolarStatsView extends WatchUi.View {
         try {
             if ( !_error ) {
                 if ( _graph.size() == 0 ) {
-                    ShowGeneration(dc);
+                    if ( _showconsumption ) {
+                        ShowValues(dc);
+                    } else {
+                        ShowGeneration(dc);
+                    }
                 } 
                 else {
                     switch ( GraphType(_graph[0].period) ) {
