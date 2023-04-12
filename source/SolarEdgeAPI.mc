@@ -20,34 +20,19 @@
 import Toybox.System;
 import Toybox.Lang;
 import Toybox.Communications;
-import Toybox.Application.Properties;
 import Toybox.Time.Gregorian;
 
 //! Creates a web request on select events, and browse through day, month and year statistics
 (:background)
 class SolarEdgeAPI extends SolarAPI {
     private var _baseUrl = "https://monitoringapi.solaredge.com/site/";
-    private var _sysid = $._sysid_ as Long;
-    private var _apikey = $._apikey_ as String;
     private var _startDate = "2022-01-01";
-    private var _errormessage as String;
-    private var _unauthorized as String;
 
     //! Set up the callback to the view
     //! @param handler Callback method for when data is received
     public function initialize(handler as Method(args as SolarStats or Array or String or Null) as Void) {
         SolarAPI.initialize(handler);
-
-        _errormessage = Application.loadResource($.Rez.Strings.error) as String;
-        _unauthorized = Application.loadResource($.Rez.Strings.unauthorized) as String;
-
-        ReadSettings();
         getDataPeriod();
-}
-
-    private function ReadSettings() {
-        _sysid  = Properties.getValue($.sysid);
-        _apikey = Properties.getValue($.api);
     }
 
     public function getStatus() as Void {

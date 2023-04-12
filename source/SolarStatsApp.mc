@@ -35,7 +35,7 @@ class SolarEdgeWidget extends Application.AppBase {
         status = new SolarStats();
 
         if(Background.getTemporalEventRegisteredTime() == null) {
-            Background.registerForTemporalEvent(new Time.Duration(5 * 60));
+            Background.registerForTemporalEvent(new Time.Duration(20 * 60));
         }
     }
 
