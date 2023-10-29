@@ -27,6 +27,7 @@
             <iq:product id="fenix7"/>
             <iq:product id="fenix7pro"/>
             <iq:product id="fenix7s"/>
+            <iq:product id="fenix7spro"/>
             <iq:product id="fenix7x"/>
             <iq:product id="fenix7xpro"/>
             <iq:product id="fr245"/>
@@ -66,6 +67,8 @@
             <iq:product id="venu2"/>
             <iq:product id="venu2plus"/>
             <iq:product id="venu2s"/>
+            <iq:product id="venu3"/>
+            <iq:product id="venu3s"/>
             <iq:product id="venud"/>
             <iq:product id="venusq"/>
             <iq:product id="venusq2"/>
@@ -74,6 +77,7 @@
             <iq:product id="vivoactive3m"/>
             <iq:product id="vivoactive4"/>
             <iq:product id="vivoactive4s"/>
+            <iq:product id="vivoactive5"/>
         </iq:products>
         <iq:permissions>
             <iq:uses-permission id="Background"/>
