@@ -26,8 +26,9 @@ enum Pages {
     day,        // 0
     hourGraph,  // 1
     dayGraph,   // 2
-    monthGraph, // 3
-    yearGraph   // 4
+    weekGraph,  // 3
+    monthGraph, // 4
+    yearGraph   // 5
 }
 
 //! Creates a web request on select events, and browse through day, month and year statistics
@@ -79,6 +80,9 @@ class SolarStatsDelegate extends WatchUi.BehaviorDelegate {
             break;
         case dayGraph:
             _api.getDayGraph(DaysAgo(6), today);
+            break;
+        case weekGraph:
+            _api.getDayGraph(DaysAgo(30), today);
             break;
         case monthGraph:
             _api.getMonthGraph(BeginOfYear(today), today);

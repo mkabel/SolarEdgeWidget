@@ -21,6 +21,7 @@ import Toybox.System;
 import Toybox.Lang;
 import Toybox.Communications;
 import Toybox.Time.Gregorian;
+import Toybox.Time;
 
 //! Creates a web request on select events, and browse through day, month and year statistics
 (:background)
@@ -132,7 +133,7 @@ class SolarEdgeAPI extends SolarAPI {
             var energy = lastDay.get("energy") as String;
             
             var stats = new SolarStats();
-            stats.period     = currentStats;
+            stats.period     = dayStats;
             stats.date       = ParseDateString(lastUpdate);
             stats.time       = ParseTimeString(lastUpdate);
             stats.generated  = energy;
@@ -180,7 +181,14 @@ class SolarEdgeAPI extends SolarAPI {
             var values = energy.get("values") as Array;
             var stats = [] as Array<SolarStats>;
             for ( var i = values.size()-1; i >= 0; i-- ) {
-                stats.add(ProcessSiteEnergy(ResponseType(energy.get("timeUnit") as String), values[i]));
+                var period = ResponseType(energy.get("timeUnit") as String);
+                if ( values.size() == 31 ) {
+                    period = monthStats;
+                    if ( i < 31-DayOfMonth(Time.today()) ) {
+                        break;
+                    }
+                }
+                stats.add(ProcessSiteEnergy(period, values[i]));
             }
             _notify.invoke(stats);
         } else {
@@ -227,13 +235,15 @@ class SolarEdgeAPI extends SolarAPI {
         var type = unknown;
 
         if ( unit.equals("QUARTER_OF_AN_HOUR") ) {
-            type = dayStats;
+            type = currentStats;
         } else if ( unit.equals("DAY") ) {
             type = weekStats;
-        } else if ( unit.equals("MONTH") ) {
+        } else if ( unit.equals("WEEK") ) {
             type = monthStats;
-        } else if ( unit.equals("YEAR") ) {
+        } else if ( unit.equals("MONTH") ) {
             type = yearStats;
+        } else if ( unit.equals("YEAR") ) {
+            type = totalStats;
         }
 
         return type;
@@ -308,4 +318,10 @@ public function CheckFloat( value as Float ) as Float {
         value = NaN;
     }
     return value;
+}
+
+(:background)
+public function DayOfMonth( date as Time.Moment ) as Number {
+    return Gregorian.info(date, Time.FORMAT_SHORT).day;
+    //return 31;
 }

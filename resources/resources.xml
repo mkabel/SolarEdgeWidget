@@ -1,9 +1,11 @@
 <resources>
     <string id="today">Today</string>
     <string id="day">Day</string>
+    <string id="week">Week</string>
     <string id="month">Month</string>
     <string id="last6hours">Last 6 hours</string>
     <string id="year">Year</string>
+    <string id="total">Total</string>
     <string id="consumed">Consumed</string>
     <string id="current">Current</string>
     <string id="connect">Please,\nconnect\nPhone</string>

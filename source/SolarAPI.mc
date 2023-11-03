@@ -24,12 +24,13 @@ import Toybox.Time.Gregorian;
 
 (:background)
 enum  Statistics {
-    unknown,      // 0
-    currentStats, // 1
-    dayStats,     // 2
-    weekStats,    // 3
-    monthStats,   // 4
-    yearStats     // 5
+    unknown,       // 0
+    dayStats,      // 1
+    currentStats,  // 2
+    weekStats,     // 3
+    monthStats,    // 4
+    yearStats,     // 5
+    totalStats     // 6
 }
 
 (:background)

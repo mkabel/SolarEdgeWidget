@@ -39,9 +39,9 @@ class SolarStatsView extends WatchUi.View {
     private var _message = _na_ as String;
     private var _today = _na_ as String;
     private var _day = _na_ as String;
+    private var _week = _na_ as String;
     private var _last6hours = _na_ as String;
-    private var _month = _na_ as String;
-    private var _year = _na_ as String;
+    private var _total = _na_ as String;
     private var _consumed = _na_ as String;
     private var _current = _na_ as String;
     private var _invalid = _na_ as String;
@@ -59,8 +59,8 @@ class SolarStatsView extends WatchUi.View {
     public function onLayout(dc as Dc) as Void {
         _today      = WatchUi.loadResource($.Rez.Strings.today) as String;
         _day        = WatchUi.loadResource($.Rez.Strings.day) as String;
-        _month      = WatchUi.loadResource($.Rez.Strings.month) as String;
-        _year       = WatchUi.loadResource($.Rez.Strings.year) as String;
+        _week       = WatchUi.loadResource($.Rez.Strings.week) as String;
+        _total      = WatchUi.loadResource($.Rez.Strings.total) as String;
         _consumed   = WatchUi.loadResource($.Rez.Strings.consumed) as String;
         _current    = WatchUi.loadResource($.Rez.Strings.current) as String;
         _last6hours = WatchUi.loadResource($.Rez.Strings.last6hours) as String;
@@ -116,7 +116,7 @@ class SolarStatsView extends WatchUi.View {
 
     private function GraphType( period as String ) as GraphTypes {
         var gt = barGraph as GraphTypes;
-        if ( period == dayStats ) {
+        if ( period == currentStats ) {
             gt = lineGraph;
         }
         return gt;
@@ -316,43 +316,86 @@ class SolarStatsView extends WatchUi.View {
         var fhTiny  = dc.getFontHeight(Graphics.FONT_SYSTEM_TINY);
         var fhXTiny = dc.getFontHeight(Graphics.FONT_SYSTEM_XTINY);
 
+        var cumGen = 0;
+        var cumCon = 0;
+
         for ( var i = 0; i < values.size(); i++ ) {
-            var x1 = offsetX - stepSize*(i+1) + 5;
-            var x2 = x1 - 3;
-            var w = stepSize - 10;
+            cumGen += values[i].generated;
+
+            //show generation
+            var x1 = offsetX - stepSize*(i+1) + Offset(stepSize) + 1;
+            var w = stepSize - 2*Offset(stepSize) - 1;
             var h1 = (values[i].generated / norm).toLong();
-            var h2 = (values[i].consumed / norm).toLong();
             var y1 = offsetY - h1;
-            var y2 = offsetY - h2;
-            
             dc.setPenWidth(2);
             dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_BLACK);
             dc.fillRectangle(x1, y1, w, h1);
-            if ( _showconsumption ) {
-                dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_BLACK);
-                dc.drawRectangle(x2, y2, w + 7, h2);
-            }
 
+            //show consumption
+            // cumCon += values[i].consumed;
+            // var x2 = x1 - 3;
+            // var h2 = (values[i].consumed / norm).toLong();
+            // var y2 = offsetY - h2;
+            //
+            // if ( _showconsumption ) {
+            //     dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_BLACK);
+            //     dc.drawRectangle(x2, y2, w + 7, h2);
+            // }
+
+            // Draw tickline
             dc.setPenWidth(1);
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
             dc.drawLine(offsetX - stepSize*i, offsetY + 5, offsetX - stepSize*i, offsetY - 5);
 
+            // Show date label
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
             var dateString = Date(values[i]);
             var textWidth = dc.getTextWidthInPixels(dateString, Graphics.FONT_SYSTEM_XTINY);
-            if ( (textWidth+2) > stepSize and dateString.length() == 3 ) {
+            if ( (textWidth+1) > stepSize and dateString.length() == 3 ) {
+                // reduce width for year width
                 dateString = dateString.substring(0, 1);
+                textWidth = dc.getTextWidthInPixels(dateString, Graphics.FONT_SYSTEM_XTINY);
             }
-            dc.drawText(offsetX - stepSize*(i+0.5), offsetY, Graphics.FONT_SYSTEM_XTINY, dateString, Graphics.TEXT_JUSTIFY_CENTER );
+            if ( values[i].period == monthStats && dateString.length() == 1 ) {
+                // make sure the month view uses regular spacing - two characters but necessarily not display
+                textWidth = textWidth + dc.getTextWidthInPixels("0", Graphics.FONT_SYSTEM_XTINY);
+            }
+            if ( ShowLabel(i, textWidth, stepSize) ) {
+                dc.drawText(offsetX - stepSize*(i+0.5), offsetY, Graphics.FONT_SYSTEM_XTINY, dateString, Graphics.TEXT_JUSTIFY_CENTER );
+            }
         }
 
 
         dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
         dc.drawText(dc.getWidth() / 2, (dc.getHeight() + height) / 2 + fhXTiny, Graphics.FONT_SYSTEM_TINY, Header(values[0]), Graphics.TEXT_JUSTIFY_CENTER);
-        dc.drawText(dc.getWidth() / 2, (dc.getHeight() - height) / 2 - fhTiny - fhXTiny - 5, Graphics.FONT_SYSTEM_TINY, ((values[0].generated/1000).toFloat()).format("%.0f") + " kWh", Graphics.TEXT_JUSTIFY_CENTER );
-        if ( _showconsumption ) {
-            dc.drawText(dc.getWidth() / 2, (dc.getHeight() - height) / 2 - fhXTiny - 5, Graphics.FONT_SYSTEM_XTINY, _consumed + ": " + ((values[0].consumed/1000).toFloat()).format("%.0f") + " kWh", Graphics.TEXT_JUSTIFY_CENTER );
+        if ( cumGen < 10000000 ) {
+            dc.drawText(dc.getWidth() / 2, (dc.getHeight() - height) / 2 - fhTiny - fhXTiny - 5, Graphics.FONT_SYSTEM_TINY, ((cumGen/1000).toFloat()).format("%.0f") + " kWh", Graphics.TEXT_JUSTIFY_CENTER );
+        } else {
+            dc.drawText(dc.getWidth() / 2, (dc.getHeight() - height) / 2 - fhTiny - fhXTiny - 5, Graphics.FONT_SYSTEM_TINY, ((cumGen/1000000).toFloat()).format("%.2f") + " MWh", Graphics.TEXT_JUSTIFY_CENTER );
         }
+        if ( _showconsumption ) {
+            dc.drawText(dc.getWidth() / 2, (dc.getHeight() - height) / 2 - fhXTiny - 5, Graphics.FONT_SYSTEM_XTINY, _consumed + ": " + ((cumCon/1000).toFloat()).format("%.0f") + " kWh", Graphics.TEXT_JUSTIFY_CENTER );
+        }
+    }
+
+    private function Offset( stepSize as Long ) as Number {
+        var offset = 4;
+        if ( stepSize < 25 ) {
+            offset = 1;
+        }
+        if ( stepSize < 11 ) {
+            offset = 0;
+        }
+        return offset;
+    }
+
+    private function ShowLabel( index as Number, textWidth as Number, labelWidth as Long ) as Boolean {
+        var divider = textWidth / labelWidth + 1;
+
+        if ( index % divider == 0 ) {
+            return true;
+        }
+        return false;
     }
 
     private function Normalize( maximum as Long, height as Float ) as Float {
@@ -381,9 +424,12 @@ class SolarStatsView extends WatchUi.View {
                 dateString = dI.day_of_week.substring(0,1);
                 break;
             case monthStats:
-                dateString = dI.month;
+                dateString = dI.day.toString();
                 break;
             case yearStats:
+                dateString = dI.month;
+                break;
+            case totalStats:
                 dateString = dI.year.toString();
                 break;
             default:
@@ -444,20 +490,23 @@ class SolarStatsView extends WatchUi.View {
     private function Header( stats as SolarStats ) as String {
         var header = _na_;
         switch ( stats.period ) {
-            case currentStats:
+            case dayStats:
                 header = _today;
                 break;
-            case dayStats:
+            case currentStats:
                 header = _last6hours;
                 break;
             case weekStats:
-                header = _day;
+                header = _week;
                 break;
             case monthStats:
-                header = _month;
+                header = Gregorian.info(Time.today(), Time.FORMAT_LONG).month;
                 break;
             case yearStats:
-                header = _year;
+                header = Gregorian.info(Time.today(), Time.FORMAT_SHORT).year;
+                break;
+            case totalStats:
+                header = _total;
                 break;
             default:
                 break;
