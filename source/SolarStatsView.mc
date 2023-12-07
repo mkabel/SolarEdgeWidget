@@ -186,7 +186,7 @@ class SolarStatsView extends WatchUi.View {
         dc.drawText(dc.getWidth() / 2, locTime, Graphics.FONT_SYSTEM_XTINY, "@ " + _stats.time.substring(0,5), Graphics.TEXT_JUSTIFY_CENTER );
 
         dc.drawText(dc.getWidth() / 2, locConsumed, Graphics.FONT_SYSTEM_TINY, _consumed + ": " + (_stats.consumed/1000).format("%.1f")+ " kWh", Graphics.TEXT_JUSTIFY_CENTER );
-        dc.drawText(dc.getWidth() / 2, locConsumption, Graphics.FONT_SYSTEM_XTINY, _current + ": " + _stats.consuming + " W", Graphics.TEXT_JUSTIFY_CENTER );
+        dc.drawText(dc.getWidth() / 2, locConsumption, Graphics.FONT_SYSTEM_XTINY, _current + ": " + _stats.consuming.format("%.1f") + " W", Graphics.TEXT_JUSTIFY_CENTER );
     }
 
     private function ShowLineGraph(dc as Dc, values as Array<SolarStats>) {
@@ -324,7 +324,7 @@ class SolarStatsView extends WatchUi.View {
 
             //show generation
             var x1 = offsetX - stepSize*(i+1) + Offset(stepSize) + 1;
-            var w = stepSize - 2*Offset(stepSize) - 1;
+            var w = stepSize - 1 - 2*Offset(stepSize);
             var h1 = (values[i].generated / norm).toLong();
             var y1 = offsetY - h1;
             dc.setPenWidth(2);
@@ -332,15 +332,21 @@ class SolarStatsView extends WatchUi.View {
             dc.fillRectangle(x1, y1, w, h1);
 
             //show consumption
-            // cumCon += values[i].consumed;
-            // var x2 = x1 - 3;
-            // var h2 = (values[i].consumed / norm).toLong();
-            // var y2 = offsetY - h2;
-            //
-            // if ( _showconsumption ) {
-            //     dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_BLACK);
-            //     dc.drawRectangle(x2, y2, w + 7, h2);
-            // }
+            cumCon += values[i].consumed;
+            var x2 = x1 - OffsetConsumption(stepSize);
+            var h2 = (values[i].consumed / norm).toLong();
+            var y2 = offsetY - h2;
+            
+            if ( _showconsumption ) {
+                dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_BLACK);
+                if ( stepSize < 16 ) {
+                    dc.setPenWidth(1);
+                    dc.drawRectangle(x2, y2, w + 2*OffsetConsumption(stepSize), h2);
+                } else {
+                    dc.setPenWidth(2);
+                    dc.drawRectangle(x2, y2, w + 2*OffsetConsumption(stepSize) + 1, h2);
+                }
+            }
 
             // Draw tickline
             dc.setPenWidth(1);
@@ -361,7 +367,7 @@ class SolarStatsView extends WatchUi.View {
                 textWidth = textWidth + dc.getTextWidthInPixels("0", Graphics.FONT_SYSTEM_XTINY);
             }
             if ( ShowLabel(i, textWidth, stepSize) ) {
-                dc.drawText(offsetX - stepSize*(i+0.5), offsetY, Graphics.FONT_SYSTEM_XTINY, dateString, Graphics.TEXT_JUSTIFY_CENTER );
+                dc.drawText(offsetX - stepSize*(i+0.5), offsetY+1, Graphics.FONT_SYSTEM_XTINY, dateString, Graphics.TEXT_JUSTIFY_CENTER );
             }
         }
 
@@ -374,16 +380,27 @@ class SolarStatsView extends WatchUi.View {
             dc.drawText(dc.getWidth() / 2, (dc.getHeight() - height) / 2 - fhTiny - fhXTiny - 5, Graphics.FONT_SYSTEM_TINY, ((cumGen/1000000).toFloat()).format("%.2f") + " MWh", Graphics.TEXT_JUSTIFY_CENTER );
         }
         if ( _showconsumption ) {
+            if ( cumCon < 10000000 ) {
             dc.drawText(dc.getWidth() / 2, (dc.getHeight() - height) / 2 - fhXTiny - 5, Graphics.FONT_SYSTEM_XTINY, _consumed + ": " + ((cumCon/1000).toFloat()).format("%.0f") + " kWh", Graphics.TEXT_JUSTIFY_CENTER );
+            } else {
+                dc.drawText(dc.getWidth() / 2, (dc.getHeight() - height) / 2 - fhXTiny - 5, Graphics.FONT_SYSTEM_XTINY, _consumed + ": " + ((cumCon/1000000).toFloat()).format("%.2f") + " MWh", Graphics.TEXT_JUSTIFY_CENTER );
+            }
+
+            
         }
     }
 
     private function Offset( stepSize as Long ) as Number {
         var offset = 4;
-        if ( stepSize < 25 ) {
-            offset = 1;
+        if ( stepSize < 16 ) {
+            offset = 0;
         }
-        if ( stepSize < 11 ) {
+        return offset;
+        }
+
+    private function OffsetConsumption( stepSize as Long ) as Number {
+        var offset = 2;
+        if ( stepSize < 16 ) {
             offset = 0;
         }
         return offset;
