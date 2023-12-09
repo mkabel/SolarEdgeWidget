@@ -67,7 +67,7 @@ class SolarEdgeWidget extends Application.AppBase {
     }    
 
     (:glance)
-    public function getGlanceView() as Array<GlanceView>? {
+    public function getGlanceView() as Array<WatchUi.GlanceView or WatchUi.GlanceViewDelegate> or Null {
         var view = new $.SolarStatsGlanceView();
         return [view] as Array<GlanceView>;
     }
