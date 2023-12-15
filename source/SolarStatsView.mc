@@ -115,11 +115,7 @@ class SolarStatsView extends WatchUi.View {
     }
 
     private function GraphType( period as String ) as GraphTypes {
-        var gt = barGraph as GraphTypes;
-        if ( period == currentStats ) {
-            gt = lineGraph;
-        }
-        return gt;
+        return (period == currentStats) ? lineGraph : barGraph;
     }
 
     private function ShowGeneration(dc as Dc) {
@@ -321,31 +317,23 @@ class SolarStatsView extends WatchUi.View {
 
         for ( var i = 0; i < values.size(); i++ ) {
             cumGen += values[i].generated;
+            cumCon += values[i].consumed;
 
             //show generation
             var x1 = offsetX - stepSize*(i+1) + Offset(stepSize) + 1;
-            var w = stepSize - 1 - 2*Offset(stepSize);
+            var w1 = stepSize - 1 - 2*Offset(stepSize);
             var h1 = (values[i].generated / norm).toLong();
             var y1 = offsetY - h1;
-            dc.setPenWidth(2);
-            dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_BLACK);
-            dc.fillRectangle(x1, y1, w, h1);
+            drawGenerationRectangle(dc, x1, y1, w1, h1);
 
             //show consumption
-            cumCon += values[i].consumed;
             var x2 = x1 - OffsetConsumption(stepSize);
+            var w2 = w1 + 2*OffsetConsumption(stepSize) + (IsNarrow(stepSize) ? 0 : 1);
             var h2 = (values[i].consumed / norm).toLong();
             var y2 = offsetY - h2;
-            
+            var penWidth = IsNarrow(stepSize) ? 1 : 2;
             if ( _showconsumption ) {
-                dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_BLACK);
-                if ( stepSize < 16 ) {
-                    dc.setPenWidth(1);
-                    dc.drawRectangle(x2, y2, w + 2*OffsetConsumption(stepSize), h2);
-                } else {
-                    dc.setPenWidth(2);
-                    dc.drawRectangle(x2, y2, w + 2*OffsetConsumption(stepSize) + 1, h2);
-                }
+                drawConsumptionRectangle(dc, x2, y2, w2, h2, penWidth);
             }
 
             // Draw tickline
@@ -355,17 +343,21 @@ class SolarStatsView extends WatchUi.View {
 
             // Show date label
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_BLACK);
+
             var dateString = Date(values[i]);
             var textWidth = dc.getTextWidthInPixels(dateString, Graphics.FONT_SYSTEM_XTINY);
+            
             if ( (textWidth+1) > stepSize and dateString.length() == 3 ) {
-                // reduce width for year width
+                // reduce width for year overview
                 dateString = dateString.substring(0, 1);
                 textWidth = dc.getTextWidthInPixels(dateString, Graphics.FONT_SYSTEM_XTINY);
             }
+            
             if ( values[i].period == monthStats && dateString.length() == 1 ) {
                 // make sure the month view uses regular spacing - two characters but necessarily not display
                 textWidth = textWidth + dc.getTextWidthInPixels("0", Graphics.FONT_SYSTEM_XTINY);
             }
+            
             if ( ShowLabel(i, textWidth, stepSize) ) {
                 dc.drawText(offsetX - stepSize*(i+0.5), offsetY+1, Graphics.FONT_SYSTEM_XTINY, dateString, Graphics.TEXT_JUSTIFY_CENTER );
             }
@@ -381,7 +373,7 @@ class SolarStatsView extends WatchUi.View {
         }
         if ( _showconsumption ) {
             if ( cumCon < 10000000 ) {
-            dc.drawText(dc.getWidth() / 2, (dc.getHeight() - height) / 2 - fhXTiny - 5, Graphics.FONT_SYSTEM_XTINY, _consumed + ": " + ((cumCon/1000).toFloat()).format("%.0f") + " kWh", Graphics.TEXT_JUSTIFY_CENTER );
+                dc.drawText(dc.getWidth() / 2, (dc.getHeight() - height) / 2 - fhXTiny - 5, Graphics.FONT_SYSTEM_XTINY, _consumed + ": " + ((cumCon/1000).toFloat()).format("%.0f") + " kWh", Graphics.TEXT_JUSTIFY_CENTER );
             } else {
                 dc.drawText(dc.getWidth() / 2, (dc.getHeight() - height) / 2 - fhXTiny - 5, Graphics.FONT_SYSTEM_XTINY, _consumed + ": " + ((cumCon/1000000).toFloat()).format("%.2f") + " MWh", Graphics.TEXT_JUSTIFY_CENTER );
             }
@@ -390,40 +382,41 @@ class SolarStatsView extends WatchUi.View {
         }
     }
 
+    private function IsNarrow( stepSize as Long ) as Boolean {
+        return (stepSize < 20);
+    }
+
     private function Offset( stepSize as Long ) as Number {
-        var offset = 4;
-        if ( stepSize < 16 ) {
-            offset = 0;
-        }
-        return offset;
+        return IsNarrow(stepSize) | !_showconsumption ? 1 : 4;
         }
 
     private function OffsetConsumption( stepSize as Long ) as Number {
-        var offset = 2;
-        if ( stepSize < 16 ) {
-            offset = 0;
+        return IsNarrow(stepSize) ? 1 : 2;
         }
-        return offset;
+
+    // Function to draw a rectangle for generation
+    private function drawGenerationRectangle( dc as Dc, x as Long, y as Long, width as Long, height as Long ) {
+            dc.setPenWidth(1);
+            dc.setColor(Graphics.COLOR_YELLOW, Graphics.COLOR_BLACK);
+            dc.fillRectangle(x, y, width, height);
+        }
+
+    // Function to draw a rectangle based on conditions
+    private function drawConsumptionRectangle( dc as Dc, x as Long, y as Long, width as Long, height as Long, penWidth as Number ) {
+        dc.setPenWidth(penWidth);
+        dc.setColor(Graphics.COLOR_RED, Graphics.COLOR_BLACK);
+        dc.drawRectangle(x, y, width, height);
     }
 
     private function ShowLabel( index as Number, textWidth as Number, labelWidth as Long ) as Boolean {
         var divider = textWidth / labelWidth + 1;
-
-        if ( index % divider == 0 ) {
-            return true;
-        }
-        return false;
+        return (index % divider == 0) ? true : false;
     }
 
     private function Normalize( maximum as Long, height as Float ) as Float {
         PreconditionCheck( height > 0 );
         var norm = maximum / height;
-
-        if ( norm < 1.0 ) {
-            norm = 1.0;
-        }
-
-        return norm;
+        return (norm < 1.0) ? 1.0 : norm;
     }
 
     private function PreconditionCheck( valid as Boolean ) {
