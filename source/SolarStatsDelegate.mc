@@ -70,31 +70,36 @@ class SolarStatsDelegate extends WatchUi.BehaviorDelegate {
             _idx = day;
         }
 
-        var today = DaysAgo(0);
+        var now = Now();
         switch ( _idx ) {
         case day:
             _api.getStatus();
             break;
         case hourGraph:
-            _api.getHistory(today);
+            _api.getHistory(DaysAgo(0), now);
             break;
         case dayGraph:
-            _api.getDayGraph(DaysAgo(6), today);
+            _api.getDayGraph(DaysAgo(6), now);
             break;
         case weekGraph:
-            _api.getDayGraph(DaysAgo(30), today);
+            _api.getDayGraph(DaysAgo(30), now);
             break;
         case monthGraph:
-            _api.getMonthGraph(BeginOfYear(today), today);
+            _api.getMonthGraph(BeginOfYear(DaysAgo(0)), now);
             break;
         case yearGraph:
-            _api.getYearGraph(today);
+            _api.getYearGraph(now);
             break;
         default:
             break;
         }
 
         return true;
+    }
+
+    private function Now() as Gregorian.Info {
+        var now = new Time.Moment(Time.now().value());
+        return Gregorian.info(now, Time.FORMAT_SHORT);
     }
 
     private function DaysAgo( days_ago as Number ) as Gregorian.Info {
@@ -106,7 +111,10 @@ class SolarStatsDelegate extends WatchUi.BehaviorDelegate {
         var options = {
             :year => date.year,
             :month => date.month,
-            :day => 1
+            :day => 1,
+            :hour => 0,
+            :min => 0,
+            :sec => 0
         };
         return Gregorian.info(Gregorian.moment(options), Time.FORMAT_SHORT);
     }
@@ -115,7 +123,10 @@ class SolarStatsDelegate extends WatchUi.BehaviorDelegate {
         var options = {
             :year => date.year,
             :month => 1,
-            :day => 1
+            :day => 1,
+            :hour => 0,
+            :min => 0,
+            :sec => 0
         };
         return Gregorian.info(Gregorian.moment(options), Time.FORMAT_SHORT);
     }

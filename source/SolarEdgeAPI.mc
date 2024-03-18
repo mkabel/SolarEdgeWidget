@@ -50,23 +50,20 @@ class SolarEdgeAPI extends SolarAPI {
         Communications.makeWebRequest( url, params, options, method(:onReceiveOverview) );
     }
 
-    public function getHistory( date as Gregorian.Info ) as Void {
-        var moment = new Time.Moment(Time.now().value());
-        var now = Gregorian.info(moment,Time.FORMAT_SHORT );
-        
-        getPower( DateTimeString(date), DateTimeString(now) );
+    public function getHistory( df as Gregorian.Info, dt as Gregorian.Info ) as Void {
+        getPower( DateTimeString(df), DateTimeString(dt) );
     }
 
     public function getDayGraph( df as Gregorian.Info, dt as Gregorian.Info ) as Void {
-        getEnergy("DAY", DateString(df), DateString(dt));
+        getEnergyDetails("DAY", DateTimeString(df), DateTimeString(dt));
     }
 
     public function getMonthGraph( df as Gregorian.Info, dt as Gregorian.Info ) as Void {
-        getEnergy("MONTH", DateString(df), DateString(dt));
+        getEnergyDetails("MONTH", DateTimeString(df), DateTimeString(dt));
     }
 
     public function getYearGraph( date as Gregorian.Info ) as Void {
-        getEnergy("YEAR", _startDate, DateString(date));
+        getEnergyDetails("YEAR", _startDate + " 00:00:00", DateTimeString(date));
     }
 
     //! Query the statistics of the PV System for the specified periods
@@ -120,6 +117,25 @@ class SolarEdgeAPI extends SolarAPI {
         Communications.makeWebRequest( url, params, options, method(:onEnergyResponse) );
     }
 
+    //! Query the statistics of the PV System for the specified periods
+    private function getEnergyDetails( unit as String, df as String, dt as String) as Void {
+        var url = _baseUrl + _sysid + "/energyDetails";
+
+        var params = {
+            "api_key"   => _apikey,
+            "startTime" => df,
+            "endTime"   => dt,
+            "timeUnit"  => unit,
+            "meters"    => "PRODUCTION,CONSUMPTION"
+        };
+
+        var options = {
+			:method => Communications.HTTP_REQUEST_METHOD_GET
+		};
+
+        Communications.makeWebRequest( url, params, options, method(:onEnergyDetailsResponse) );
+    }
+
     //! Receive the data from the web request
     public function onReceiveOverview(responseCode as Number, data as Dictionary or String or Null) as Void {
         if (responseCode == 200 ) {
@@ -150,6 +166,7 @@ class SolarEdgeAPI extends SolarAPI {
         if (responseCode == 200 ) {
             var dataPeriod = data.get("dataPeriod") as Dictionary;
             _startDate = dataPeriod.get("startDate");
+            System.print(_startDate);
         } else {
             ProcessError(responseCode, data);
         }
@@ -188,7 +205,7 @@ class SolarEdgeAPI extends SolarAPI {
                         break;
                     }
                 }
-                stats.add(ProcessSiteEnergy(period, values[i]));
+                stats.add(ProcessSiteEnergy(period, values[i], null));
             }
             _notify.invoke(stats);
         } else {
@@ -196,13 +213,50 @@ class SolarEdgeAPI extends SolarAPI {
         }
     }
 
-    private function ProcessSiteEnergy( period as Statistics, values as Dictionary ) as SolarStats {
+    //! Receive the data from the web request
+    public function onEnergyDetailsResponse(responseCode as Number, data as Dictionary or String or Null) as Void {
+        if (responseCode == 200 ) {
+            var energy = data.get("energyDetails") as Dictionary;
+            var meters = energy.get("meters") as Array;
+
+            var production = null as Array<Dictionary>;
+            var consumption = null as Array<Dictionary>;
+
+            for ( var i = 0; i < meters.size(); i++ ) {
+                if ( meters[i].get("type").equals("Production") ) {
+                    production = meters[0].get("values") as Array<Dictionary>;
+                } else if ( meters[i].get("type").equals("Consumption") ) {
+                    consumption = meters[1].get("values") as Array;
+                }
+            }
+            
+            var stats = [] as Array<SolarStats>;
+            for ( var i = production.size()-1; i >= 0; i-- ) {
+                var period = ResponseType(energy.get("timeUnit") as String);
+                if ( production.size() == 31 ) {
+                    period = monthStats;
+                    if ( i < 31-DayOfMonth(Time.today()) ) {
+                        break;
+                    }
+                }
+                stats.add(ProcessSiteEnergy(period, production[i], consumption != null ? consumption[i] : null));
+            }
+            _notify.invoke(stats);
+        } else {
+            ProcessError(responseCode, data);
+        }
+    }
+
+    private function ProcessSiteEnergy( period as Statistics, production as Dictionary, consumption as Dictionary or Null ) as SolarStats {
         var _stats = new SolarStats();
 
-        _stats.date         = ParseDateString(values.get("date") as String);
-        _stats.time         = ParseTimeString(values.get("date") as String);
+        _stats.date         = ParseDateString(production.get("date") as String);
+        _stats.time         = ParseTimeString(production.get("date") as String);
         _stats.period       = period;
-        _stats.generated    = CheckFloat(values.get("value") as Float);
+        _stats.generated    = CheckFloat(production.get("value") as Float);
+        if ( consumption != null ) {
+            _stats.consumed = CheckFloat(consumption.get("value") as Float);
+        }
 
         return _stats;
     }

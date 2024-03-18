@@ -59,7 +59,7 @@ class SolarAPI {
         throw new Lang.Exception();
     }
 
-    public function getHistory( date as Gregorian.Info ) as Void {
+    public function getHistory( df as Gregorian.Info, dt as Gregorian.Info ) as Void {
         throw new Lang.Exception();
     }
 

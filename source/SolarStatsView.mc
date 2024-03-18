@@ -51,7 +51,7 @@ class SolarStatsView extends WatchUi.View {
     //! Constructor
     public function initialize() {
         WatchUi.View.initialize();
-        //_showconsumption = Properties.getValue($.consumption);
+        _showconsumption = Properties.getValue($.consumption);
     }
 
     //! Load your resources here
