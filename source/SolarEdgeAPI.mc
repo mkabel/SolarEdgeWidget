@@ -89,6 +89,7 @@ class SolarEdgeAPI extends SolarAPI {
             "api_key"   => _apikey,
             "startTime" => tf,
             "endTime"   => tt,
+            "meters"    => "Production",
         };
 
         var options = {
