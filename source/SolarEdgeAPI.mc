@@ -51,7 +51,7 @@ class SolarEdgeAPI extends SolarAPI {
     }
 
     public function getHistory( df as Gregorian.Info, dt as Gregorian.Info ) as Void {
-        getPower( DateTimeString(df), DateTimeString(dt) );
+        getPowerDetails( DateTimeString(df), DateTimeString(dt) );
     }
 
     public function getDayGraph( df as Gregorian.Info, dt as Gregorian.Info ) as Void {
@@ -82,7 +82,7 @@ class SolarEdgeAPI extends SolarAPI {
     }
 
 
-    private function getPower( tf as String, tt as String ) as Void {
+    private function getPowerDetails( tf as String, tt as String ) as Void {
         var url = _baseUrl + _sysid + "/powerDetails";
 
         var params = {
@@ -95,7 +95,7 @@ class SolarEdgeAPI extends SolarAPI {
 			:method => Communications.HTTP_REQUEST_METHOD_GET
 		};
 
-        Communications.makeWebRequest( url, params, options, method(:onPowerResponse) );
+        Communications.makeWebRequest( url, params, options, method(:onPowerDetailsResponse) );
 
     }
 
@@ -173,11 +173,18 @@ class SolarEdgeAPI extends SolarAPI {
     }
 
     //! Receive the data from the web request
-    public function onPowerResponse( responseCode as Number, data as Dictionary or String or Null ) as Void {
+    public function onPowerDetailsResponse( responseCode as Number, data as Dictionary or String or Null ) as Void {
         if (responseCode == 200) {
             var powerDetails = data.get("powerDetails") as Dictionary;
             var meters = powerDetails.get("meters") as Array;
-            var values = meters[0].get("values") as Dictionary;
+            var values = null as Array<Dictionary>;
+
+            for ( var i=0; i<meters.size(); i++ ) {
+                if ( meters[i].get("type").equals("Production") ) {
+                    values = meters[i].get("values") as Array<Dictionary>;
+                }
+            }
+            
             var stats = [] as Array<SolarStats>;
             for ( var i = values.size()-1; i >= 0; i-- ) {
                 if ( System.getSystemStats().freeMemory < 2500 ) {
@@ -224,9 +231,9 @@ class SolarEdgeAPI extends SolarAPI {
 
             for ( var i = 0; i < meters.size(); i++ ) {
                 if ( meters[i].get("type").equals("Production") ) {
-                    production = meters[0].get("values") as Array<Dictionary>;
+                    production = meters[i].get("values") as Array<Dictionary>;
                 } else if ( meters[i].get("type").equals("Consumption") ) {
-                    consumption = meters[1].get("values") as Array;
+                    consumption = meters[i].get("values") as Array;
                 }
             }
             
