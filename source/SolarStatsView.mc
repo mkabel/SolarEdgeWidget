@@ -83,11 +83,12 @@ class SolarStatsView extends WatchUi.View {
         try {
             if ( !_error ) {
                 if ( _graph.size() == 0 ) {
-                    if ( _showconsumption ) {
-                        ShowValues(dc);
-                    } else {
-                        ShowGeneration(dc);
-                    }
+                    ShowGeneration(dc);
+                    // if ( _showconsumption ) {
+                    //     ShowValues(dc);
+                    // } else {
+                    //     ShowGeneration(dc);
+                    // }
                 } 
                 else {
                     switch ( GraphType(_graph[0].period) ) {
