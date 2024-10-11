@@ -1,5 +1,5 @@
 //
-// Copyright 2022-2023 by garmin@ibuyonline.nl
+// Copyright 2022-2024 by garmin@emeska.nl
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and 
 // associated documentation files (the "Software"), to deal in the Software without restriction, 
@@ -28,6 +28,9 @@ class SolarStats {
     public var period = unknown as Statistics;
     public var date = _na_ as String;
     public var time = _na_ as String;
+
+    //extended parameters
+    public var extended = [NaN, NaN, NaN, NaN, NaN, NaN] as Array<Float>;
 
     public function set( valueString as String ) {
         var result = ParseString(";", valueString);

@@ -19,15 +19,27 @@
 
 import Toybox.Lang;
 
-public var _sysid_ = 99999 as Long;
-public var _apikey_ = "n/a" as String;
-public var _na_ = "n/a" as String;
+(:background)
+class SolarSettings {
+    private var _array = [] as Array<String>;
 
-enum PropKeys {
-    sysid       = "sysid_prop",
-    api         = "apikey_prop",
-    consumption = "consumption_prop",
-    extended    = "extended_prop",
-    extvalue    = "extvalue_prop",
+    public function initialize( values as Array<String> ) {
+        _array = values;
+    }
+
+    public function getLabel( index as Number ) {
+        var label = "" as String;
+        if ( _array.size() > 2*index ) {
+            label = _array[2*index];
+        }
+        return label;
+    }
+
+    public function getUnit( index as Number ) {
+        var unit = "" as String;
+        if ( _array.size() > 2*index+1 ) {
+            unit = _array[2*index+1];
+        }
+        return unit;
+    }
 }
-

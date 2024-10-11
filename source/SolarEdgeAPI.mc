@@ -1,5 +1,5 @@
 //
-// Copyright 2022-2023 by garmin@ibuyonline.nl
+// Copyright 2022-2024 by garmin@emeska.nl
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and 
 // associated documentation files (the "Software"), to deal in the Software without restriction, 
@@ -31,9 +31,13 @@ class SolarEdgeAPI extends SolarAPI {
 
     //! Set up the callback to the view
     //! @param handler Callback method for when data is received
-    public function initialize(handler as Method(args as SolarStats or Array or String or Null) as Void) {
+    public function initialize(handler as Method(args as SolarStats or SolarSettings or Array or String or Null) as Void) {
         SolarAPI.initialize(handler);
         getDataPeriod();
+    }
+
+    public function getSystem() {
+        // not implemented for Solar Edge
     }
 
     public function getStatus() as Void {

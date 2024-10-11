@@ -1,5 +1,5 @@
 //
-// Copyright 2022-2023 by garmin@ibuyonline.nl
+// Copyright 2022-2024 by garmin@emeska.nl
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and 
 // associated documentation files (the "Software"), to deal in the Software without restriction, 
@@ -35,7 +35,7 @@ class SolarEdgeWidget extends Application.AppBase {
         status = new SolarStats();
 
         if(Background.getTemporalEventRegisteredTime() == null) {
-            Background.registerForTemporalEvent(new Time.Duration(20 * 60));
+            Background.registerForTemporalEvent(new Time.Duration(15 * 60));
         }
     }
 

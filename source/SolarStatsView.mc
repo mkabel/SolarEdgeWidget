@@ -1,5 +1,5 @@
 //
-// Copyright 2022-2023 by garmin@ibuyonline.nl
+// Copyright 2022-2024 by garmin@emeska.nl
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and 
 // associated documentation files (the "Software"), to deal in the Software without restriction, 
@@ -35,6 +35,7 @@ enum GraphTypes {
 class SolarStatsView extends WatchUi.View {
     private var _stats = new SolarStats();
     private var _graph = [] as Array;
+    private var _settings = new SolarSettings([]);
     private var _error as Boolean = false;
     private var _message = _na_ as String;
     private var _today = _na_ as String;
@@ -46,12 +47,17 @@ class SolarStatsView extends WatchUi.View {
     private var _current = _na_ as String;
     private var _invalid = _na_ as String;
     private var _showconsumption = false as Boolean;
+    private var _showextended = false as Boolean;
+    private var _extvalue = 0 as Long;
     private var _errorMessage = null as WatchUi.TextArea;
 
     //! Constructor
     public function initialize() {
         WatchUi.View.initialize();
+        
         _showconsumption = Properties.getValue($.consumption);
+        //_showextended    = Properties.getValue($.extended);
+        //_extvalue        = Properties.getValue($.extvalue);
     }
 
     //! Load your resources here
@@ -169,8 +175,9 @@ class SolarStatsView extends WatchUi.View {
         var locHeader = dc.getHeight() / 2 - 2*fhLarge - fhTiny;
         var locGenerated = locHeader;
         var locGeneration = locHeader;
-        var locConsumed = dc.getHeight() / 2 + 15;
+        var locConsumed = dc.getHeight() / 2 + 6;
         var locConsumption = locConsumed + fhTiny;
+        var locExtended = locConsumption + fhXTiny + 2;
         var locTime = dc.getHeight() / 2 + 2*fhLarge;
 
         locGenerated = locGenerated + fhLarge + 5;
@@ -184,6 +191,11 @@ class SolarStatsView extends WatchUi.View {
 
         dc.drawText(dc.getWidth() / 2, locConsumed, Graphics.FONT_SYSTEM_TINY, _consumed + ": " + (_stats.consumed/1000).format("%.1f")+ " kWh", Graphics.TEXT_JUSTIFY_CENTER );
         dc.drawText(dc.getWidth() / 2, locConsumption, Graphics.FONT_SYSTEM_XTINY, _current + ": " + _stats.consuming.format("%.1f") + " W", Graphics.TEXT_JUSTIFY_CENTER );
+        if ( _showextended ) {
+            dc.drawText(dc.getWidth() / 2, locExtended, Graphics.FONT_SYSTEM_XTINY, _settings.getLabel(_extvalue) + 
+                        ": " + _stats.extended[_extvalue].format("%.1f") + " " + _settings.getUnit(_extvalue), 
+                        Graphics.TEXT_JUSTIFY_CENTER );
+        }
     }
 
     private function ShowLineGraph(dc as Dc, values as Array<SolarStats>) {
@@ -548,7 +560,7 @@ class SolarStatsView extends WatchUi.View {
 
     //! Show the result or status of the web request
     //! @param args Data from the web request, or error message
-    public function onReceive(result as SolarStats or Array or String or Null) as Void {
+    public function onReceive(result as SolarStats or SolarSettings or Array or String or Null) as Void {
         if (result instanceof String) {
             _error      = true;
             _message    = result;
@@ -560,6 +572,8 @@ class SolarStatsView extends WatchUi.View {
         } else if (result instanceof Array ) {
             _error      = false;
             _graph      = result;
+        } else if (result instanceof SolarSettings ) {
+            _settings   = result;
         }
         WatchUi.requestUpdate();
     }

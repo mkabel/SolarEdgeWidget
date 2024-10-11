@@ -1,5 +1,5 @@
 //
-// Copyright 2022-2023 by garmin@ibuyonline.nl
+// Copyright 2022-2024 by garmin@emeska.nl
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and 
 // associated documentation files (the "Software"), to deal in the Software without restriction, 
@@ -33,20 +33,21 @@ enum Pages {
 
 //! Creates a web request on select events, and browse through day, month and year statistics
 class SolarStatsDelegate extends WatchUi.BehaviorDelegate {
-    private var _notify as Method(args as SolarStats or Array or String or Null) as Void;
+    private var _notify as Method(args as SolarStats or SolarSettings or Array or String or Null) as Void;
     private var _idx = day as Pages;
     private var _connectphone as String;
     private var _api as SolarAPI;
    
     //! Set up the callback to the view
     //! @param handler Callback method for when data is received
-    public function initialize(handler as Method(args as SolarStats or Array or String or Null) as Void) {
+    public function initialize( handler as Method(args as SolarStats or SolarSettings or Array or String or Null) as Void) {
         WatchUi.BehaviorDelegate.initialize();
         _notify = handler;
 
         _connectphone = WatchUi.loadResource($.Rez.Strings.connect) as String;
 
         _api = new SolarEdgeAPI(handler);
+        _api.getSystem();
         _api.getStatus();
     }
 

@@ -1,5 +1,5 @@
 //
-// Copyright 2022-2023 by garmin@ibuyonline.nl
+// Copyright 2022-2024 by garmin@emeska.nl
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and 
 // associated documentation files (the "Software"), to deal in the Software without restriction, 
@@ -35,13 +35,14 @@ enum  Statistics {
 
 (:background)
 class SolarAPI {
-    protected var _notify as Method(args as SolarStats or Array or String or Null) as Void;
+    protected var _notify as Method(args as SolarStats or SolarSettings or Array or String or Null) as Void;
     protected var _sysid = $._sysid_ as Long;
     protected var _apikey = $._apikey_ as String;
+    protected var _extended = false as Boolean;
     protected var _errormessage = "ERROR" as String;
     protected var _unauthorized = "UNAUTHORIZED" as String;
 
-    hidden function initialize( handler as Method(args as SolarStats or Array or String or Null) as Void ) {
+    hidden function initialize( handler as Method(args as SolarStats or SolarSettings or Array or String or Null) as Void ) {
         _notify = handler;
 
         _errormessage = Application.loadResource($.Rez.Strings.error) as String;
@@ -53,9 +54,14 @@ class SolarAPI {
     private function ReadSettings() {
         _sysid  = Properties.getValue($.sysid);
         _apikey = Properties.getValue($.api);
+        //_extended = Properties.getValue($.extended);
     }
 
     public function getStatus() as Void {
+        throw new Lang.Exception();
+    }
+
+    public function getSystem() as Void {
         throw new Lang.Exception();
     }
 
