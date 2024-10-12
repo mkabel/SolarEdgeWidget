@@ -57,7 +57,7 @@ class SolarEdgeWidget extends Application.AppBase {
     //! Return the initial view for the app
     //! @return Array Pair [View, Delegate]
     public function getInitialView() as [ WatchUi.Views ] or [ WatchUi.Views, WatchUi.InputDelegates ] {
-        var view = new $.SolarStatsView();
+        var view = new $.SolarEdgeStatsView();
         var delegate = new $.SolarStatsDelegate(view.method(:onReceive));
         return [view, delegate] as [ WatchUi.Views, WatchUi.InputDelegates ];
     }
