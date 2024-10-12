@@ -36,6 +36,12 @@ class SolarEdgeAPI extends SolarAPI {
         getDataPeriod();
     }
 
+    protected function ReadSettings() {
+        SolarAPI.ReadSettings();
+        //_extended = Properties.getValue($.extended);
+    }
+
+
     public function getSystem() {
         // not implemented for Solar Edge
     }
