@@ -118,10 +118,6 @@ class StatsView extends WatchUi.View {
         throw new Lang.Exception();
     }
 
-    private function GraphType( period as String ) as GraphTypes {
-        return (period == currentStats) ? lineGraph : barGraph;
-    }
-
     protected function ShowGeneration(dc as Dc) {
 
         var fhXLarge = dc.getFontHeight(Graphics.FONT_SYSTEM_NUMBER_THAI_HOT);
@@ -390,6 +386,10 @@ class StatsView extends WatchUi.View {
 
             
         }
+    }
+
+    private function GraphType( period as String ) as GraphTypes {
+        return (period == currentStats) ? lineGraph : barGraph;
     }
 
     private function IsNarrow( stepSize as Long ) as Boolean {
