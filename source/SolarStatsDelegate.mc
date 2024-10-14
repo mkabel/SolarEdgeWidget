@@ -40,15 +40,20 @@ class SolarStatsDelegate extends WatchUi.BehaviorDelegate {
    
     //! Set up the callback to the view
     //! @param handler Callback method for when data is received
-    public function initialize( handler as Method(args as SolarStats or SolarSettings or Array or String or Null) as Void) {
+    hidden function initialize( handler as Method(args as SolarStats or SolarSettings or Array or String or Null) as Void) {
         WatchUi.BehaviorDelegate.initialize();
         _notify = handler;
 
         _connectphone = WatchUi.loadResource($.Rez.Strings.connect) as String;
 
-        _api = new SolarEdgeAPI(handler);
+        //_api = new SolarEdgeAPI(handler);
+        _api = getSolarAPI(handler);
         _api.getSystem();
         _api.getStatus();
+    }
+
+    protected function getSolarAPI( handler as Method(args as SolarStats or SolarSettings or Array or String or Null) as Void) as SolarAPI {
+        throw new Lang.Exception();
     }
 
     //! On a menu event, make a web request

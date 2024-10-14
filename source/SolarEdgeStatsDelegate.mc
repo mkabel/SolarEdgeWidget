@@ -19,33 +19,17 @@
 
 import Toybox.System;
 import Toybox.Lang;
-import Toybox.Background;
 
-// Your service delegate has to be marked as background
-// so it can handle your service callbacks
-(:background)
-class BackgroundTimerServiceDelegate extends System.ServiceDelegate {
-    private var _api = null as SolarAPI;
-
-    //! Constructor
-    hidden function initialize() {
-        ServiceDelegate.initialize();
-        _api = getSolarAPI(method(:onReceive));
+//! Creates a web request on select events, and browse through day, month and year statistics
+class SolarEdgeStatsDelegate extends SolarStatsDelegate {
+   
+    //! Set up the callback to the view
+    //! @param handler Callback method for when data is received
+    public function initialize( handler as Method(args as SolarStats or SolarSettings or Array or String or Null) as Void) {
+        SolarStatsDelegate.initialize(handler);
     }
 
     protected function getSolarAPI( handler as Method(args as SolarStats or SolarSettings or Array or String or Null) as Void) as SolarAPI {
-        throw new Lang.Exception();
-    }
-
-    public function onReceive(result as SolarStats or Array or String or Null) as Void {
-        if ( result instanceof SolarStats ) {
-            Background.exit(result.toString());
-        } else {
-            Background.exit(false);
-        }
-    }
-
-    public function onTemporalEvent() as Void {
-        _api.getStatus();
+        return new SolarEdgeAPI(handler);
     }
 }

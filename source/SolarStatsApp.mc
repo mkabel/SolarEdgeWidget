@@ -58,12 +58,12 @@ class SolarEdgeWidget extends Application.AppBase {
     //! @return Array Pair [View, Delegate]
     public function getInitialView() as [ WatchUi.Views ] or [ WatchUi.Views, WatchUi.InputDelegates ] {
         var view = new $.SolarEdgeStatsView();
-        var delegate = new $.SolarStatsDelegate(view.method(:onReceive));
+        var delegate = new $.SolarEdgeStatsDelegate(view.method(:onReceive));
         return [view, delegate] as [ WatchUi.Views, WatchUi.InputDelegates ];
     }
 
     public function getServiceDelegate() as [ System.ServiceDelegate ] {
-        return [ new BackgroundTimerServiceDelegate() ];
+        return [ new SolarEdgeBackgroundTimerServiceDelegate() ];
     }    
 
     (:glance)
