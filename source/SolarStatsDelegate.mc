@@ -46,7 +46,6 @@ class SolarStatsDelegate extends WatchUi.BehaviorDelegate {
 
         _connectphone = WatchUi.loadResource($.Rez.Strings.connect) as String;
 
-        //_api = new SolarEdgeAPI(handler);
         _api = getSolarAPI(handler);
         _api.getSystem();
         _api.getStatus();

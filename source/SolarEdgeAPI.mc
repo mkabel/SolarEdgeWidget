@@ -177,7 +177,6 @@ class SolarEdgeAPI extends SolarAPI {
         if (responseCode == 200 ) {
             var dataPeriod = data.get("dataPeriod") as Dictionary;
             _startDate = dataPeriod.get("startDate");
-            System.print(_startDate);
         } else {
             ProcessError(responseCode, data);
         }
