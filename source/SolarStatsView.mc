@@ -32,7 +32,7 @@ enum GraphTypes {
 }
 
 //! Shows the Solar panel results
-class StatsView extends WatchUi.View {
+class SolarStatsView extends WatchUi.View {
     private var _stats = new SolarStats();
     private var _graph = [] as Array;
     private var _settings = new SolarSettings([]);
@@ -160,7 +160,7 @@ class StatsView extends WatchUi.View {
                                 Graphics.TEXT_JUSTIFY_CENTER );
     }
 
-    private function ShowValues(dc as Dc) {
+    protected function ShowValues(dc as Dc) {
         var fhLarge = dc.getFontHeight(Graphics.FONT_SYSTEM_LARGE);
         var fhXTiny = dc.getFontHeight(Graphics.FONT_SYSTEM_XTINY);
         var fhTiny  = dc.getFontHeight(Graphics.FONT_SYSTEM_TINY);

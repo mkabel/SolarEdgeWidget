@@ -20,10 +20,10 @@
 import Toybox.Graphics;
 
 //! Shows the Solar panel results
-class SolarEdgeStatsView extends StatsView {
+class SolarEdgeStatsView extends SolarStatsView {
     //! Constructor
     public function initialize() {
-        StatsView.initialize();
+        SolarStatsView.initialize();
     }
 
     protected function ShowOverview(dc as Dc) as Void {
