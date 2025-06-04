@@ -109,7 +109,7 @@ class SolarStatsDelegate extends WatchUi.BehaviorDelegate {
 
     private function DaysAgo( days_ago as Number ) as Gregorian.Info {
         var today = new Time.Moment(Time.today().value());
-        return Gregorian.info(today.subtract(new Time.Duration(days_ago*60*60*24)), Time.FORMAT_SHORT);
+        return Gregorian.info(today.subtract(new Time.Duration(days_ago*60*60*24-3600)), Time.FORMAT_SHORT);
     }
 
     private function BeginOfMonth( date as Gregorian.Info ) as Gregorian.Info {
