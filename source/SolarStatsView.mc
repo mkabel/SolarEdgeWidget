@@ -34,12 +34,11 @@ enum GraphTypes {
 //! Shows the Solar panel results
 class SolarStatsView extends WatchUi.View {
     private var _stats = new SolarStats();
-    private var _graph = [] as Array;
-    private var _settings = new SolarSettings([]);
+    private var _graph as Array<SolarStats> = [];
+    private var _settings as SolarSettings = new SolarSettings([]);
     private var _error as Boolean = false;
     private var _message = _na_ as String;
     private var _today = _na_ as String;
-    private var _day = _na_ as String;
     private var _week = _na_ as String;
     private var _last6hours = _na_ as String;
     private var _total = _na_ as String;
@@ -62,7 +61,6 @@ class SolarStatsView extends WatchUi.View {
     //! @param dc Device context
     public function onLayout(dc as Dc) as Void {
         _today      = WatchUi.loadResource($.Rez.Strings.today) as String;
-        _day        = WatchUi.loadResource($.Rez.Strings.day) as String;
         _week       = WatchUi.loadResource($.Rez.Strings.week) as String;
         _total      = WatchUi.loadResource($.Rez.Strings.total) as String;
         _consumed   = WatchUi.loadResource($.Rez.Strings.consumed) as String;
@@ -121,7 +119,6 @@ class SolarStatsView extends WatchUi.View {
     protected function ShowGeneration(dc as Dc) {
 
         var fhXLarge = dc.getFontHeight(Graphics.FONT_SYSTEM_NUMBER_THAI_HOT);
-        var fhLarge  = dc.getFontHeight(Graphics.FONT_SYSTEM_LARGE);
         
         var locHeader = 0.05*dc.getHeight();
         var locTime = 0.82*dc.getHeight();
@@ -184,7 +181,7 @@ class SolarStatsView extends WatchUi.View {
 
         dc.drawText(dc.getWidth() / 2, locConsumed, Graphics.FONT_SYSTEM_TINY, _consumed + ": " + (_stats.consumed/1000).format("%.1f")+ " kWh", Graphics.TEXT_JUSTIFY_CENTER );
         dc.drawText(dc.getWidth() / 2, locConsumption, Graphics.FONT_SYSTEM_XTINY, _current + ": " + _stats.consuming.format("%.1f") + " W", Graphics.TEXT_JUSTIFY_CENTER );
-        if ( _showextended ) {
+        if ( _showextended && _settings != null ) {
             dc.drawText(dc.getWidth() / 2, locExtended, Graphics.FONT_SYSTEM_XTINY, _settings.getLabel(_extvalue) + 
                         ": " + _stats.extended[_extvalue].format("%.1f") + " " + _settings.getUnit(_extvalue), 
                         Graphics.TEXT_JUSTIFY_CENTER );
@@ -275,10 +272,8 @@ class SolarStatsView extends WatchUi.View {
         var mic = MaxConsumption(values);
         var mc = values[mic].consumed;
 
-        var maxIndex = mig;
         var maxPower = mg;
         if ( _showconsumption and mc > mg ) {
-            maxIndex = mic;
             maxPower = mc;
         }
 

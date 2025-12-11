@@ -394,5 +394,4 @@ public function CheckFloat( value as Float ) as Float {
 (:background)
 public function DayOfMonth( date as Time.Moment ) as Number {
     return Gregorian.info(date, Time.FORMAT_SHORT).day;
-    //return 31;
 }

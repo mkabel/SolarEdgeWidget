@@ -21,13 +21,13 @@ import Toybox.Lang;
 
 (:background)
 class SolarSettings {
-    private var _array = [] as Array<String>;
+    private var _array as Array<String> = [];
 
     public function initialize( values as Array<String> ) {
         _array = values;
     }
 
-    public function getLabel( index as Number ) {
+    public function getLabel( index as Number ) as String {
         var label = "" as String;
         if ( _array.size() > 2*index ) {
             label = _array[2*index];
@@ -35,7 +35,7 @@ class SolarSettings {
         return label;
     }
 
-    public function getUnit( index as Number ) {
+    public function getUnit( index as Number ) as String {
         var unit = "" as String;
         if ( _array.size() > 2*index+1 ) {
             unit = _array[2*index+1];

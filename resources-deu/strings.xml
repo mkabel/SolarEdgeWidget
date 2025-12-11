@@ -2,10 +2,16 @@
     <string id="today">Heute</string>
     <string id="day">Tag</string>
     <string id="last6hours">Letzten 6 Stunden</string>
+    <string id="week">Woche</string>
     <string id="month">Monat</string>
     <string id="year">Jahr</string>
+    <string id="total">Gesamt</string>
+    <string id="sysid_title">System-ID</string>
+    <string id="apikey_title">API-Schlüssel</string>
     <string id="consumed">Verbraucht</string>
     <string id="current">Aktuell</string>
+    <string id="consumption_title">Verbrauch - Beta</string>
+    <string id="week">Woche</string>
     <string id="connect">Bitte,\nverbinden Sie\ndas Telefon</string>
     <string id="error" scope="background">Laden\nfehlgeschlagen\nFehler: </string>
     <string id="unauthorized" scope="background">Nicht autorisiert,\nin ConnectIQ\nkonfigurieren</string>

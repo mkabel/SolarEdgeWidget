@@ -1,12 +1,17 @@
 <resources>
     <string id="today">Vandaag</string>
     <string id="day">Dag</string>
+    <string id="week">Week</string>
     <string id="last6hours">Laatste 6 uur</string>
     <string id="month">Maand</string>
     <string id="year">Jaar</string>
+    <string id="total">Totaal</string>
     <string id="consumed">Verbruik</string>
     <string id="current">Huidig</string>
     <string id="connect">Verbindt telefoon\na.u.b.</string>
+    <string id="sysid_title">Systeem Id</string>
+    <string id="apikey_title">API sleutel</string>
+    <string id="consumption_title">Verbruik - Beta</string>
     <string id="error" scope="background">Laden mislukt\nFout: </string>
     <string id="unauthorized" scope="background">Niet\ngeautoriseerd,\nconfigureer in\nConnectIQ</string>
     <string id="invalid" scope="background">Fout gedetecteerd! Ongeldige waarde opgegeven voor methode</string>
