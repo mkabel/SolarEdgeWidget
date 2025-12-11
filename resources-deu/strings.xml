@@ -11,7 +11,6 @@
     <string id="consumed">Verbraucht</string>
     <string id="current">Aktuell</string>
     <string id="consumption_title">Verbrauch - Beta</string>
-    <string id="week">Woche</string>
     <string id="connect">Bitte,\nverbinden Sie\ndas Telefon</string>
     <string id="error" scope="background">Laden\nfehlgeschlagen\nFehler: </string>
     <string id="unauthorized" scope="background">Nicht autorisiert,\nin ConnectIQ\nkonfigurieren</string>
