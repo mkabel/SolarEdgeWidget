@@ -21,6 +21,7 @@ import Toybox.System;
 import Toybox.Lang;
 import Toybox.Application.Properties;
 import Toybox.Time.Gregorian;
+import Toybox.Time;
 
 (:background)
 enum  Statistics {
@@ -84,4 +85,46 @@ class SolarAPI {
         throw new Lang.Exception();
     }
 
+}
+
+//! convert string into a substring array
+(:background)
+public function ParseString(delimiter as String, data as String) as Array {
+    var result = [] as Array<String>;
+    var endIndex = 0;
+    var subString;
+
+    while (endIndex != null) {
+        endIndex = data.find(delimiter);
+        if ( endIndex != null ) {
+            subString = data.substring(0, endIndex) as String;
+            data = data.substring(endIndex+1, data.length());
+        } else {
+            subString = data;
+        }
+        result.add(subString);
+    }
+
+    return result;
+}
+
+(:background)
+public function CheckLong( value as Long ) as Long {
+    if ( value == null ) {
+        value = NaN;
+    }
+    return value;
+}
+
+(:background)
+public function CheckFloat( value as Float ) as Float {
+    if ( value == null ) {
+        value = NaN;
+    }
+    return value;
+}
+
+(:background)
+public function DayOfMonth( date as Time.Moment ) as Number {
+    return Gregorian.info(date, Time.FORMAT_SHORT).day;
 }

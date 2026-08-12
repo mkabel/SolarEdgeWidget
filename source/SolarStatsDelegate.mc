@@ -107,6 +107,10 @@ class SolarStatsDelegate extends WatchUi.BehaviorDelegate {
         return Gregorian.info(now, Time.FORMAT_SHORT);
     }
 
+    // Subtract an extra hour so the result lands safely inside the target
+    // calendar day even if a DST transition (CET/CEST) falls between
+    // "today" and "today - days_ago days" — otherwise a flat N*86400s
+    // subtraction can roll 1h past local midnight into the wrong day.
     private function DaysAgo( days_ago as Number ) as Gregorian.Info {
         var today = new Time.Moment(Time.today().value());
         return Gregorian.info(today.subtract(new Time.Duration(days_ago*60*60*24-3600)), Time.FORMAT_SHORT);
@@ -118,8 +122,8 @@ class SolarStatsDelegate extends WatchUi.BehaviorDelegate {
             :month => date.month,
             :day => 1,
             :hour => 0,
-            :min => 0,
-            :sec => 0
+            :minute => 0,
+            :second => 0
         };
         return Gregorian.info(Gregorian.moment(options), Time.FORMAT_SHORT);
     }
@@ -130,8 +134,8 @@ class SolarStatsDelegate extends WatchUi.BehaviorDelegate {
             :month => 1,
             :day => 1,
             :hour => 0,
-            :min => 0,
-            :sec => 0
+            :minute => 0,
+            :second => 0
         };
         return Gregorian.info(Gregorian.moment(options), Time.FORMAT_SHORT);
     }
